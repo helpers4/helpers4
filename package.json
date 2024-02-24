@@ -2,9 +2,6 @@
   "name": "@helpers4",
   "version": "2.0.0",
   "description": "A set of helpers in TS/JS, compatible with tree-shaking, which helps you to manipulate URL, Observable, Promise, ...",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [
     "helper",
     "typescript",
@@ -21,5 +18,10 @@
     "combine"
   ],
   "author": "Bérenger <berenger@arnaud.work>",
-  "license": "AGPL-3.0"
+  "license": "AGPL-3.0",
+  "repository": "github:helpers4/helpers4",
+  "scripts": {
+    "preinstall": "npx only-allow npm",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }

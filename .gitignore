@@ -1,0 +1,6 @@
+# VS Code
+.history
+
+# JS & Node
+node_modules
+build
