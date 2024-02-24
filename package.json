@@ -19,9 +19,18 @@
   ],
   "author": "Bérenger <berenger@arnaud.work>",
   "license": "AGPL-3.0",
-  "repository": "github:helpers4/helpers4",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helpers4/helpers4.git"
+  },
+  "type": "module",
   "scripts": {
-    "preinstall": "npx only-allow npm",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preinstall": "npx only-allow bun",
+    "build": "bun ./.cd/build.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.7",
+    "@types/fs-extra": "^11.0.4",
+    "fs-extra": "^11.2.0"
   }
 }
