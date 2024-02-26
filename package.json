@@ -1,6 +1,15 @@
 {
   "name": "@helpers4",
   "version": "2.0.0",
+  "author": "Bérenger <berenger@arnaud.work>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helpers4/helpers4.git"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.7",
+    "@types/fs-extra": "^11.0.4"
+  },
   "description": "A set of helpers in TS/JS, compatible with tree-shaking, which helps you to manipulate URL, Observable, Promise, ...",
   "keywords": [
     "helper",
@@ -17,20 +26,10 @@
     "observable",
     "combine"
   ],
-  "author": "Bérenger <berenger@arnaud.work>",
   "license": "AGPL-3.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/helpers4/helpers4.git"
-  },
-  "type": "module",
   "scripts": {
-    "preinstall": "npx only-allow bun",
+    "preinstall": "node -e \"if(!process.env.npm_config_user_agent?.startsWith('bun')){console.log('Use bun as package manager');process.exit(1);}\"",
     "build": "bun ./.cd/build.ts"
   },
-  "devDependencies": {
-    "@types/bun": "^1.0.7",
-    "@types/fs-extra": "^11.0.4",
-    "fs-extra": "^11.2.0"
-  }
+  "type": "module"
 }
