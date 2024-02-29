@@ -3,6 +3,8 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
+// -- removeEndingSlash --------------------------------------------------------
+
 /**
  * Simple helper method that remove an ending slash `/` if present.
  *
@@ -23,8 +25,10 @@
  * @param url a valid URL
  */
 export function removeEndingSlash(url: string): string {
-  return url[url.length - 1] === '/' ? url.slice(0, -1) : url;
+  return url && url[url.length - 1] === "/" ? url.slice(0, -1) : url;
 }
+
+// -- addLeadingSlash ----------------------------------------------------------
 
 /**
  * Simple helper method that add a leading slash `/` if not yet present.
@@ -46,8 +50,10 @@ export function removeEndingSlash(url: string): string {
  * @param url a valid URL
  */
 export function addLeadingSlash(url: string): string {
-  return url[0] === '/' ? url : '/' + url;
+  return (url || url === "") && url[0] !== "/" ? "/" + url : url;
 }
+
+// -- extractPureURI -----------------------------------------------------------
 
 /**
  * Extract only the URI from a path with optional query and fragments.
@@ -75,5 +81,5 @@ export function addLeadingSlash(url: string): string {
  * @param path a complete path without server part.
  */
 export function extractPureURI(path: string): string {
-  return path.split(/[?#]/)[0];
+  return path ? path.split(/[?#]/)[0] : path;
 }

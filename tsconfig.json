@@ -1,12 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "baseUrl": ".",
     "incremental": true,
-    "target": "es2017",
-    "outDir": "build/main",
+    "target": "esnext",
+    "outDir": "build",
     "rootDir": "src",
     "moduleResolution": "node",
-    "module": "commonjs",
+    "module": "esnext",
     "declaration": true,
     "inlineSourceMap": true,
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
@@ -39,15 +40,10 @@
     "typeRoots": [
       "node_modules/@types",
       "libs/*/src/types"
-    ],
-    "paths": {
-      "@monorepo/*": [
-        "libs/*/src"
-      ]
-    }
+    ]
   },
   "include": [
-    "src/**/*.ts"
+    "libs/**/src/**/*.ts"
   ],
   "exclude": [
     "node_modules/**"

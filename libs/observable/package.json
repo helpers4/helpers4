@@ -9,7 +9,7 @@
     "observable",
     "combine"
   ],
-  "dependencies": {
+  "peerDependencies": {
     "rxjs": ">=7"
   }
 }
