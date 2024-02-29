@@ -3,7 +3,7 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { expect, test } from "bun:test";
-import { labelize } from "./string";
+import { errorToString, labelize } from "./string";
 
 // -- labelize -----------------------------------------------------------------
 
@@ -28,3 +28,28 @@ import { labelize } from "./string";
       .forEach((word) => expect(word[0]).toBe(word[0].toUpperCase()));
   });
 });
+
+// -- errorToString ------------------------------------------------------------
+
+test("errorToString should return error when type of string", async () =>
+  expect(errorToString("unexpected error")).toBe("unexpected error"));
+
+test("errorToString should return errorMessage when present in error", async () =>
+  expect(errorToString({ error: { errorMessage: "unexpected error" } })).toBe(
+    "unexpected error"
+  ));
+
+test("errorToString should return error when present in error", async () =>
+  expect(errorToString({ error: "unexpected error" })).toBe(
+    "unexpected error"
+  ));
+
+test("errorToString should return message when present in error", async () =>
+  expect(errorToString({ message: "unexpected error" })).toBe(
+    "unexpected error"
+  ));
+
+test("errorToString should return stringified error in all other cases", async () =>
+  expect(errorToString({ customError: "unexpected error" })).toBe(
+    '{"customError":"unexpected error"}'
+  ));
