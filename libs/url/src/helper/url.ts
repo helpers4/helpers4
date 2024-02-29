@@ -1,7 +1,8 @@
 /*
  * This program is under the terms of the GNU Affero General Public License version 3
  * The full license information can be found in LICENSE in the root directory of this project.
- */
+
+*/
 
 // -- removeEndingSlash --------------------------------------------------------
 
@@ -82,4 +83,22 @@ export function addLeadingSlash(url: string): string {
  */
 export function extractPureURI(path: string): string {
   return path ? path.split(/[?#]/)[0] : path;
+}
+
+// -- cleanURL -----------------------------------------------------------------
+
+/**
+ * Clean an URI by removing duplicate slashes
+ *
+ * ### Example (es module)
+ * ```js
+ * import { cleanURI } from '@helpers4/url'
+ * console.log(cleanURI('/search//a///test/?q=search'))
+ * // => '/search/a/test/?q=search'
+ *
+ * @param uri an URI
+ * @returns a clean URI
+ */
+export function cleanURI(uri: string): string {
+  return uri.replace(/([^:]\/)\/+/g, "$1");
 }
