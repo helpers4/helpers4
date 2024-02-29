@@ -102,3 +102,28 @@ export function extractPureURI(path: string): string {
 export function cleanURI(uri: string): string {
   return uri.replace(/([^:]\/)\/+/g, "$1");
 }
+
+// -- relativeURLToAbsolute ----------------------------------------------------
+
+/**
+ * Prepend a path with the base URL.
+ *
+ * If possible, use the <base> tag to get the base URL.
+ *
+ * ### Example (es module)
+ * ```js
+ * import { relativeURLToAbsolute } from '@helpers4/url'
+ * console.log(relativeURLToAbsolute('search//a///test/?q=search'))
+ * // => 'https://www.google.com/search/a/test/?q=search'
+ *
+ * @param relativeUrl a path
+ * @returns an absolute and clean URL
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/baseURI
+ * @see cleanURI
+ */
+export function relativeURLToAbsolute(relativeUrl: string): string {
+  return (
+    removeEndingSlash(document.baseURI ?? window.location.origin) +
+    cleanURI(addLeadingSlash(relativeUrl))
+  );
+}
