@@ -4,7 +4,7 @@
  */
 import { expect, test } from "bun:test";
 import { firstValueFrom, map, of } from "rxjs";
-import { combine } from "./observable";
+import { combine, combineLatest } from "./observable";
 
 // -- combine ------------------------------------------------------------------
 
@@ -22,4 +22,26 @@ test("combine with pretreatment", async () => {
     })
   );
   return expect(result).toBe(4);
+});
+
+// -- combineLatest ------------------------------------------------------------
+
+test("combineLatest with array", async () => {
+  const result = await firstValueFrom(combineLatest([of(1), of(2)]));
+  return expect(result).toEqual([1, 2]);
+});
+
+test("combineLatest with object", async () => {
+  const result = await firstValueFrom(combineLatest({ a: of(1), b: of(2) }));
+  return expect(result).toEqual({ a: 1, b: 2 });
+});
+
+test("combineLatest with empty array", async () => {
+  const result = await firstValueFrom(combineLatest([]));
+  return expect(result).toEqual([]);
+});
+
+test("combineLatest with empty object", async () => {
+  const result = await firstValueFrom(combineLatest({}));
+  return expect(result).toEqual({});
 });
