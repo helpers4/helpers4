@@ -2,13 +2,14 @@
  * This program is under the terms of the GNU Affero General Public License version 3
  * The full license information can be found in LICENSE in the root directory of this project.
  */
-
 import {
   combineLatest,
   map as mapOperator,
   Observable,
   OperatorFunction,
-} from 'rxjs';
+} from "rxjs";
+
+// -- combine ------------------------------------------------------------------
 
 type combineOptions<T, U> = {
   readonly preTreatment?: OperatorFunction<readonly [T, U], readonly [T, U]>;

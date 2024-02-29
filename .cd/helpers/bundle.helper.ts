@@ -14,7 +14,8 @@ export const bundle = async (lib: string): Promise<void> => {
 
     // Default. For generating bundles that are intended for execution by a browser.
     // Prioritizes the "browser" export condition when resolving imports.
-    // Importing any built-in modules, like node:events or node:path will work, but calling some functions, like fs.readFile will not work.
+    // Importing any built-in modules, like node:events or node:path will work,
+    // but calling some functions, like fs.readFile will not work.
     target: "browser",
 
     // Currently the bundler only supports one module format: "esm".
