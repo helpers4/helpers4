@@ -3,7 +3,12 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 import { expect, test } from "bun:test";
-import { addLeadingSlash, extractPureURI, removeEndingSlash } from "./url";
+import {
+  addLeadingSlash,
+  cleanURI,
+  extractPureURI,
+  removeEndingSlash,
+} from "./url";
 
 // -- removeEndingSlash --------------------------------------------------------
 
@@ -59,3 +64,15 @@ test("extractPureURI should handle undefined", () =>
   expect(extractPureURI(undefined)).toBe(undefined));
 test("extractPureURI should handle null", () =>
   expect(extractPureURI(null)).toBe(null));
+
+// -- cleanURI -----------------------------------------------------------------
+
+test("cleanURL should remove double slashes from given url", () =>
+  expect(cleanURI("/home/path///something")).toBe("/home/path/something"));
+
+test("cleanURL should ignore good url", () =>
+  expect(cleanURI("/home/path/something")).toBe("/home/path/something"));
+
+test("cleanURL should ignore empty string", () =>
+  expect(cleanURI("")).toBe(""));
+
