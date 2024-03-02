@@ -4,3 +4,5 @@
 # JS & Node
 node_modules
 build
+
+megalinter-reports/

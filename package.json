@@ -1,7 +1,8 @@
 {
-  "name": "@helpers4",
+  "name": "@helpers4/monorepo",
   "version": "2.0.0",
   "author": "Bérenger <berenger@arnaud.work>",
+  "private": true,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/helpers4/helpers4.git"
@@ -26,10 +27,13 @@
   "scripts": {
     "preinstall": "node -e \"if(!process.env.npm_config_user_agent?.startsWith('bun')){console.log('Use bun as package manager');process.exit(1);}\"",
     "build": "bun ./.cd/build.ts",
-    "test": "bun test libs/*/src/**/*.test.ts"
+    "test": "bun test libs/*/src/**/*.test.ts",
+    "lint": "bunx mega-linter-runner --flavor javascript -e 'SHOW_ELAPSED_TIME=true' --fix"
   },
   "type": "module",
   "dependencies": {
+    "eslint-plugin-eslint-comments": "latest",
+    "eslint-plugin-functional": "latest",
     "rxjs": ">=7"
   },
   "devDependencies": {

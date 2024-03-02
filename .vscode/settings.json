@@ -1,9 +1,4 @@
 {
-  "conventionalCommits.scopes": [
-    "monorepo",
-    "observable",
-    "promise",
-    "string",
-    "url"
-  ]
+  "conventionalCommits.scopes": ["monorepo", "observable", "promise", "string", "url"],
+  "cSpell.configPath": "./.cd/linter"
 }
