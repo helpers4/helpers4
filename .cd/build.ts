@@ -3,6 +3,7 @@ import { LIBS, bundle, copyDistFiles, customizePackageJson } from "./helpers";
 
 // Empty build folder
 emptyDir("./build");
+console.info(" ✔️🪥 Clean workspace");
 
 // Build each lib, one by one
 for (const lib of LIBS) {

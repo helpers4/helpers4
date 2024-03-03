@@ -1,7 +1,10 @@
 /*
  * This program is under the terms of the GNU Affero General Public License version 3
  * The full license information can be found in LICENSE in the root directory of this project.
- */
+
+*/
+
+// -- removeEndingSlash --------------------------------------------------------
 
 /**
  * Simple helper method that remove an ending slash `/` if present.
@@ -23,8 +26,10 @@
  * @param url a valid URL
  */
 export function removeEndingSlash(url: string): string {
-  return url[url.length - 1] === '/' ? url.slice(0, -1) : url;
+  return url && url[url.length - 1] === "/" ? url.slice(0, -1) : url;
 }
+
+// -- addLeadingSlash ----------------------------------------------------------
 
 /**
  * Simple helper method that add a leading slash `/` if not yet present.
@@ -46,8 +51,10 @@ export function removeEndingSlash(url: string): string {
  * @param url a valid URL
  */
 export function addLeadingSlash(url: string): string {
-  return url[0] === '/' ? url : '/' + url;
+  return (url || url === "") && url[0] !== "/" ? "/" + url : url;
 }
+
+// -- extractPureURI -----------------------------------------------------------
 
 /**
  * Extract only the URI from a path with optional query and fragments.
@@ -75,5 +82,48 @@ export function addLeadingSlash(url: string): string {
  * @param path a complete path without server part.
  */
 export function extractPureURI(path: string): string {
-  return path.split(/[?#]/)[0];
+  return path ? path.split(/[?#]/)[0] : path;
+}
+
+// -- cleanURL -----------------------------------------------------------------
+
+/**
+ * Clean an URI by removing duplicate slashes
+ *
+ * ### Example (es module)
+ * ```js
+ * import { cleanURI } from '@helpers4/url'
+ * console.log(cleanURI('/search//a///test/?q=search'))
+ * // => '/search/a/test/?q=search'
+ *
+ * @param uri an URI
+ * @returns a clean URI
+ */
+export function cleanURI(uri: string): string {
+  return uri.replace(/([^:]\/)\/+/g, "$1");
+}
+
+// -- relativeURLToAbsolute ----------------------------------------------------
+
+/**
+ * Prepend a path with the base URL.
+ *
+ * If possible, use the <base> tag to get the base URL.
+ *
+ * ### Example (es module)
+ * ```js
+ * import { relativeURLToAbsolute } from '@helpers4/url'
+ * console.log(relativeURLToAbsolute('search//a///test/?q=search'))
+ * // => 'https://www.google.com/search/a/test/?q=search'
+ *
+ * @param relativeUrl a path
+ * @returns an absolute and clean URL
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/baseURI
+ * @see cleanURI
+ */
+export function relativeURLToAbsolute(relativeUrl: string): string {
+  return (
+    removeEndingSlash(document.baseURI ?? window.location.origin) +
+    cleanURI(addLeadingSlash(relativeUrl))
+  );
 }
