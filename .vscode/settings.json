@@ -1,9 +1,2 @@
 {
-  "conventionalCommits.scopes": [
-    "monorepo",
-    "observable",
-    "promise",
-    "string",
-    "url"
-  ]
 }

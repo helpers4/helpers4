@@ -39,12 +39,12 @@
     "types": [],
     "typeRoots": [
       "node_modules/@types",
-      "libs/*/src/types"
+      "helpers/*/src/types"
     ]
   },
   "include": [
-    "libs/**/src/**/*.ts"
-  ],
+    "helpers/**/src/**/*.ts"
+, "helpers/url/url.ts", "helpers/url/url.test.ts"  ],
   "exclude": [
     "node_modules/**"
   ],
