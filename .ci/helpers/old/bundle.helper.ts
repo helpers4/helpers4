@@ -42,7 +42,7 @@ export async function bundle(lib: string): Promise<void> {
     ],
 
     // A list of import paths to consider external.
-    external: ["radash", "rxjs"],
+    external: ["radashi", "rxjs"],
   });
 
   if (result.success) {

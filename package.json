@@ -25,7 +25,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "preinstall": "node -e \"if(!process.env.npm_config_user_agent?.startsWith('bun')){console.log('Use bun as package manager');process.exit(1);}\"",
-    "build": "bun ./.cd/build.ts",
+    "build": "bun ./.ci/build/",
     "test": "bun test libs/*/src/**/*.test.ts"
   },
   "type": "module",
