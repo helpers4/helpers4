@@ -1,0 +1,9 @@
+export const CATEGORY_TEMPLATE_FILES = {
+  LICENSE: "LICENSE.md",
+  README: "README.md",
+  PACKAGE_JSON: "package.json"
+};
+
+export const CATEGORY_TEMPLATE_STATIC_FILES = [
+  CATEGORY_TEMPLATE_FILES.LICENSE
+];

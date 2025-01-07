@@ -1,12 +1,8 @@
 import { emptyDir, ensureDir, readdir } from "fs-extra";
 import { join } from "path";
-import { compileTypeScript, createIndexFile } from "../helpers";
-
-const DIR = {
-  ROOT: "./",
-  BUILD: join("./", "build"),
-  HELPERS: join("./", "helpers")
-};
+import { compileTypeScript, createIndexFile, copyStaticCategoryFiles, prepareCategoryReadme, prepareCategoryPackageJson } from "../helpers";
+import { DIR } from "../constants/dir.constant";
+import { CATEGORY_TEMPLATE_FILES } from "../constants/files.constant";
 
 async function main() {
   // Create or empty the /build directory
@@ -35,6 +31,15 @@ async function main() {
 
       // Compile the index.ts file
       await compileTypeScript(indexFilePath, libDir);
+
+      // Copy static files
+      await copyStaticCategoryFiles(buildCategoryDir);
+
+      // Copy and prepare README.md
+      await prepareCategoryReadme(buildCategoryDir, category, tsFiles, categories);
+
+      // Copy and prepare package.json
+      await prepareCategoryPackageJson(buildCategoryDir, category, tsFiles);
 
       console.info(` ✔️📦 Built ${category}`);
     }
