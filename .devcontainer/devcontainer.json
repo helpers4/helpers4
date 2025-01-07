@@ -1,0 +1,15 @@
+{
+  "name": "Bun",
+  "image": "ghcr.io/nhaef/devcontainer-bun:latest",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "oven.bun-vscode",
+        "streetsidesoftware.code-spell-checker",
+        "vivaxy.vscode-conventional-commits",
+        "oven.bun-vscode"
+      ]
+    }
+  }
+}
