@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { readJson, writeJson } from "fs-extra";
 import * as path from "path";
 import rootPackage from "../../package.json";
-import templatePackage from "../template/package.json";
+import templatePackage from "../../.template/package.json";
 
 const FILES_TO_COPY = [
   "CHANGELOG.md",

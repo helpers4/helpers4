@@ -1,5 +1,5 @@
 import { emptyDir } from "fs-extra";
-import { LIBS, bundle, copyDistFiles, customizePackageJson } from "./helpers";
+import { LIBS, bundle, copyDistFiles, customizePackageJson } from "../../helpers";
 
 // Empty build folder
 emptyDir("./build");
