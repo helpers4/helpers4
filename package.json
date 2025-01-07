@@ -1,7 +1,7 @@
 {
   "name": "@helpers4",
-  "version": "2.0.0",
-  "author": "Bérenger <berenger@arnaud.work>",
+  "version": "2.0.0-alpha.0",
+  "author": "baxyz <berenger@arnaud.work>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/helpers4/helpers4.git"
@@ -30,7 +30,10 @@
   },
   "type": "module",
   "dependencies": {
-    "rxjs": ">=7"
+    "angular-oauth2-oidc": "^19.0.0",
+    "radashi": "^12.3.1",
+    "rxjs": ">=7",
+    "simple-deepcompare": "^1.0.7"
   },
   "devDependencies": {
     "@types/bun": "^1.0.7",
