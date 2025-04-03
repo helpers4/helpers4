@@ -5,10 +5,10 @@
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
+        "GuilhermeTheodoro.typescript-indexing",
         "oven.bun-vscode",
         "streetsidesoftware.code-spell-checker",
-        "vivaxy.vscode-conventional-commits",
-        "oven.bun-vscode"
+        "vivaxy.vscode-conventional-commits"
       ]
     }
   }
