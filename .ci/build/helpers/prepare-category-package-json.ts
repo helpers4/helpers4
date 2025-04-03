@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "fs-extra";
 import { join } from "path";
-import { DIR } from "../constants";
+import { DIR } from "../../_constants";
 
 /**
  * Copy and prepare the package.json file for the build category directory.

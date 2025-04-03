@@ -1,2 +1,2 @@
 [test]
-preload = "./.cd/tests/preload.ts"
+preload = ".ci/tests/preload.ts"

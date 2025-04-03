@@ -1,5 +1,8 @@
 import { join } from "path";
 
+/**
+ * Directories used in the project.
+ */
 export const DIR = {
   ROOT: "./",
   BUILD: join("./", "build"),

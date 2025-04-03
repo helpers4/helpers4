@@ -1,8 +1,13 @@
 import { emptyDir, ensureDir, readdir } from "fs-extra";
 import { join } from "path";
-import { compileTypeScript, createIndexFile, copyStaticCategoryFiles, prepareCategoryReadme, prepareCategoryPackageJson } from "../helpers";
-import { DIR } from "../constants/dir.constant";
-import { CATEGORY_TEMPLATE_FILES } from "../constants/files.constant";
+import { DIR } from "../_constants";
+import {
+  compileTypeScript,
+  copyStaticCategoryFiles,
+  createIndexFile,
+  prepareCategoryPackageJson,
+  prepareCategoryReadme
+} from "./helpers";
 
 async function main() {
   // Create or empty the /build directory
