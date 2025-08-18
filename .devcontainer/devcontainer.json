@@ -63,7 +63,19 @@
       }
     }
   },
-  "postCreateCommand": "bun install",
+  "containerEnv": {
+    "SSH_AUTH_SOCK": "${localEnv:SSH_AUTH_SOCK}",
+    "GPG_TTY": "/dev/pts/0"
+  },
+  "mounts": [
+    // Persist zsh history locally
+    "source=${localWorkspaceFolder}/.devcontainer/data/zsh_history,target=/home/vscode/.zsh_history,type=bind,consistency=cached",
+    // Git config from host (read-only)
+    "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
+    // GPG directory from host (for commit signing)
+    "source=${localEnv:HOME}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "bash .devcontainer/setup-container.sh && bun install",
   "forwardPorts": [],
   "portsAttributes": {},
   "remoteUser": "vscode"
