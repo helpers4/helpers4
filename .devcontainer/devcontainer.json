@@ -1,15 +1,70 @@
 {
-  "name": "Bun",
-  "image": "ghcr.io/nhaef/devcontainer-bun:latest",
+  "name": "Helpers4 Bun",
+  "image": "oven/bun:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "ppa": true,
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "username": "vscode"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts",
+      "nodeGypDependencies": true
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
-        "dbaeumer.vscode-eslint",
-        "GuilhermeTheodoro.typescript-indexing",
+        // Core TypeScript & JavaScript
+        "ms-vscode.vscode-typescript-next",
         "oven.bun-vscode",
+        // Code Quality & Linting
+        "dbaeumer.vscode-eslint",
         "streetsidesoftware.code-spell-checker",
-        "vivaxy.vscode-conventional-commits"
-      ]
+        // Testing
+        "vitest.explorer",
+        // TypeScript Utilities
+        "guilhermetheodoro.typescript-indexing",
+        "christian-kohler.npm-intellisense",
+        "aleclarson.radashi",
+        // Git & Version Control
+        "donjayamanne.githistory",
+        "gxl.git-graph-3",
+        "github.vscode-pull-request-github",
+        "github.vscode-github-actions",
+        "vivaxy.vscode-conventional-commits",
+        // AI Assistant
+        "github.copilot",
+        "github.copilot-chat",
+        // Editor Enhancements
+        "cardinal90.multi-cursor-case-preserve",
+        "moshfeu.compare-folders",
+        // File Format Support
+        "redhat.vscode-yaml",
+        "mechatroner.rainbow-csv"
+      ],
+      "settings": {
+        "typescript.preferences.useAliasesForRenames": false,
+        "typescript.updateImportsOnFileMove.enabled": "always",
+        "eslint.workingDirectories": [
+          "."
+        ],
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "bun.runtime": "bun"
+      }
     }
-  }
+  },
+  "postCreateCommand": "bun install",
+  "forwardPorts": [],
+  "portsAttributes": {},
+  "remoteUser": "vscode"
 }
