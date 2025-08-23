@@ -1,4 +1,10 @@
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
  * Removes the leading slash `/` from the given URL if it is present.
  *
  * This function is useful for ensuring that URLs are properly formatted

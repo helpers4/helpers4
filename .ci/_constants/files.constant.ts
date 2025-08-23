@@ -1,4 +1,10 @@
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
  * Files available in the template.
  * These files aimed to be copied to the build folder.
  */

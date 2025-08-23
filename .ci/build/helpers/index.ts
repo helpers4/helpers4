@@ -1,3 +1,9 @@
+/**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
 export * from './compile-type-script.helper';
 export * from './copy-static-category-files';
 export * from './create-index-file.helper';

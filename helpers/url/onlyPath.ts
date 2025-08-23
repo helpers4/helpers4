@@ -1,4 +1,10 @@
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
  * Extract only the path from an URI with optional query and fragments.
  *
  * For example, all these parameters will return `/path`:

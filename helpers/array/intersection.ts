@@ -1,4 +1,10 @@
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
  * Compute the intersection of two arrays, meaning the elements that are present
  * in both arrays.
  *
