@@ -1,59 +1,18 @@
-import { emptyDir, ensureDir } from "fs-extra";
-import { readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { emptyDir } from "fs-extra";
 import { DIR } from "../_constants";
-import {
-  compileTypeScript,
-  copyStaticCategoryFiles,
-  createIndexFile,
-  getExternalDependencies,
-  prepareCategoryPackageJson,
-  prepareCategoryReadme
-} from "./helpers";
+import { buildCategories } from "./build-categories";
+import { buildBundle } from "./build-bundle";
 
 async function main() {
   // Create or empty the /build directory
   await emptyDir(DIR.BUILD);
   console.info(" ✔️🪥 Clean workspace");
 
-  // Read categories in the /helpers directory
-  const categories = await readdir(DIR.HELPERS);
+  // Build all individual categories
+  const validCategories = await buildCategories();
 
-  for (const category of categories) {
-    const categoryPath = join(DIR.HELPERS, category);
-    const files = await readdir(categoryPath);
-
-    // Filter .ts files, ignoring .test.ts, .bench.ts, etc.
-    const tsFiles = files.filter(file => file.endsWith(".ts") && !file.match(/\.\w+\.ts$/));
-
-    if (tsFiles.length > 0) {
-      const buildCategoryDir = join(DIR.BUILD, category);
-      const libDir = join(buildCategoryDir, "lib");
-
-      // Create the category directory in /build
-      await ensureDir(libDir);
-
-      // Create an index.ts to export all methods
-      const indexFilePath = await createIndexFile(categoryPath, tsFiles);
-
-      // Compile the index.ts file
-      await compileTypeScript(indexFilePath, libDir);
-
-      // Copy static files
-      await copyStaticCategoryFiles(buildCategoryDir);
-
-      // Copy and prepare README.md
-      await prepareCategoryReadme(buildCategoryDir, category, tsFiles, categories);
-
-      // Get external dependencies for this category
-      const externalDependencies = await getExternalDependencies(category);
-
-      // Copy and prepare package.json
-      await prepareCategoryPackageJson(buildCategoryDir, category, tsFiles, externalDependencies);
-
-      console.info(` ✔️📦 Built ${category}`);
-    }
-  }
+  // Build the bundle package with all valid categories
+  await buildBundle(validCategories);
 }
 
 main().catch(error => {
