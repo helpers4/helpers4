@@ -31,8 +31,11 @@ export async function buildCategories(): Promise<string[]> {
     const categoryPath = join(DIR.HELPERS, category);
     const files = await readdir(categoryPath);
 
-    // Filter .ts files, ignoring .test.ts, .bench.ts, etc.
-    const tsFiles = files.filter(file => file.endsWith(".ts") && !file.match(/\.\w+\.ts$/));
+    // Filter .ts files, ignoring .test.ts, .bench.ts, index.ts, etc.
+    const tsFiles = files
+      .filter(file => file.endsWith(".ts"))
+      .filter(file => !file.match(/\.\w+\.ts$/))
+      .filter(file => file !== "index.ts");
 
     if (tsFiles.length > 0) {
       const buildCategoryDir = join(DIR.BUILD, category);

@@ -24,7 +24,7 @@
 
 import { join } from "node:path";
 import { DIR } from "../../_constants";
-import { stripV } from "../../../helpers/version";
+import { stripV } from "../../../helpers/version/stripV";
 
 /**
  * Create metadata files for the bundle.
