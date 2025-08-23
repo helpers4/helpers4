@@ -16,6 +16,11 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
       "nodeGypDependencies": true
+    },
+    "ghcr.io/baxyz/devcontainer-features/shell-history-per-project:0.0.2": {
+      "shell": "zsh",
+      "historyDirectory": "/workspaces/.shell-history",
+      "maxHistorySize": "10000"
     }
   },
   "customizations": {
@@ -71,8 +76,6 @@
     "GPG_TTY": "/dev/pts/0"
   },
   "mounts": [
-    // Persist shell data locally (including zsh history)
-    "source=${localWorkspaceFolder}/.devcontainer/data/shell,target=/home/vscode/.shell,type=bind,consistency=cached",
     // Git config from host (read-only)
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     // GPG directory from host (for commit signing)
