@@ -14,15 +14,26 @@ The script handles the initial setup and configuration of the container environm
 ## 🔧 What it does
 
 1. **SSH Setup**: Creates `~/.ssh` with `700` permissions
-2. **GPG Setup**: Sets `700` for `~/.gnupg` directory and `600` for contents
-3. **Environment Check**: Validates SSH_AUTH_SOCK and mounted configurations
-4. **Status Report**: Shows what's working and what might need attention
+2. **GPG Setup**: Sets `700` for `~/.gnupg` directory and `600` for files
+3. **Zsh History**: Ensures proper permissions (`600`)
+4. **Environment Check**: Validates SSH_AUTH_SOCK and mounted configurations
+5. **Status Report**: Shows what's working and what might need attention
 
 ## 📝 Execution Order
 
 ```
 Container Start → setup-container.sh → bun install → Ready to use
 ```
+
+## 🚀 First Time Setup
+
+**Before starting the devcontainer for the first time**, run:
+
+```bash
+./.devcontainer/init-data.sh
+```
+
+This creates the necessary files (like `zsh_history`) that Docker needs to mount.
 
 ## 🛠️ Customization
 
