@@ -23,7 +23,7 @@ import {
  */
 export async function buildCategories(): Promise<string[]> {
   // Read categories in the /helpers directory
-  const categories = await readdir(DIR.HELPERS);
+  const categories = (await readdir(DIR.HELPERS)).sort();
   const validCategories: string[] = [];
 
   // Build individual categories

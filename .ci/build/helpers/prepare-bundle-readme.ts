@@ -6,6 +6,7 @@
 
 import { join } from "node:path";
 import { DIR } from "../../_constants";
+import { generateCategoriesTable } from "./categories-table.helper";
 
 /**
  * Copy and prepare the README.md file for the bundle directory.
@@ -29,10 +30,14 @@ export async function prepareBundleReadme(
     .map(category => `- \`npm install @helpers4/${category}\``)
     .join('\n');
 
+  // Generate the categories table
+  const categoriesTable = await generateCategoriesTable(categories);
+
   // Replace placeholders
   const readme = templateReadme
     .replace('{{categories}}', categoriesList)
-    .replace('{{individual_packages}}', individualPackagesList);
+    .replace('{{individual_packages}}', individualPackagesList)
+    .replace('{{categories_table}}', categoriesTable);
 
   // Use Bun's native file writing
   await Bun.write(join(buildBundleDir, "README.md"), readme);

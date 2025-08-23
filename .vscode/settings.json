@@ -53,5 +53,8 @@
       "end": " */",
       "blankLinesAfter": 1
     }
+  ],
+  "conventionalCommits.scopes": [
+    "CI-CD"
   ]
 }
