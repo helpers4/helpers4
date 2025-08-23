@@ -1,7 +1,7 @@
 {
-  "name": "@helpers4/{{category}}",
+  "name": "@helpers4/all",
   "version": "{{version}}",
-  "description": "A set of helpers in TS/JS, compatible with tree-shaking, for {{category}}.",
+  "description": "Complete collection of helpers4 utilities - all categories in one convenient package.",
   "author": "baxyz <baxy@etik.com>",
   "license": "AGPL-3.0",
   "repository": {
@@ -11,12 +11,14 @@
   "type": "module",
   "keywords": [
     "helpers",
-    "{{category}}",
-    "{{methods}}"
+    "utilities",
+    "typescript",
+    "javascript",
+    "collection",
+    "bundle",
+    "all"
   ],
   "files": [
-    "lib/index.js",
-    "lib/index.js.map",
     "LICENSE.md",
     "package.json",
     "README.md"

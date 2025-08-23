@@ -8,5 +8,6 @@ export const DIR = {
   BUILD: join("./", "build"),
   HELPERS: join("./", "helpers"),
   TEMPLATE: join("./", ".template"),
-  TEMPLATE_CATEGORY: join("./", ".template", "category")
+  TEMPLATE_CATEGORY: join("./", ".template", "category"),
+  TEMPLATE_BUNDLE: join("./", ".template", "bundle")
 };
