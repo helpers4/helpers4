@@ -71,8 +71,8 @@
     "GPG_TTY": "/dev/pts/0"
   },
   "mounts": [
-    // Persist zsh history locally
-    "source=${localWorkspaceFolder}/.devcontainer/data/zsh_history,target=/home/vscode/.zsh_history,type=bind,consistency=cached",
+    // Persist shell data locally (including zsh history)
+    "source=${localWorkspaceFolder}/.devcontainer/data/shell,target=/home/vscode/.shell,type=bind,consistency=cached",
     // Git config from host (read-only)
     "source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,consistency=cached",
     // GPG directory from host (for commit signing)
