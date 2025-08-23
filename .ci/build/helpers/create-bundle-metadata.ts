@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { DIR } from "../../_constants";
+import { stripV } from "../../../helpers/version/stripV";
 
 /**
  * Create metadata files for the bundle.
@@ -26,9 +27,6 @@ export async function createBundleMetadata(
   }
 
   // Create build.json with build metadata
-  const stripV = (version: string | null | undefined) =>
-    typeof version === "string" && version.startsWith("v") ? version.slice(1) : version;
-
   const buildMetadata = {
     buildDate: new Date().toISOString(),
     version: stripV(rootPackage.version),
