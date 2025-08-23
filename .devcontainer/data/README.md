@@ -8,16 +8,19 @@ This directory stores **local persistent data** for the devcontainer that should
 .devcontainer/
 ├── devcontainer.json   # Main devcontainer configuration
 ├── setup-container.sh  # Container setup script (executed before bun install)
+├── init-data.sh        # One-time initialization script (run before first container start)
 └── data/
     ├── README.md       # This file
-    └── zsh_history     # Zsh command history (local persistence)
+    └── zsh_history     # Zsh command history (local persistence ONLY)
 ```
 
 ## 🎯 Purpose
 
-This directory contains data that needs to be persisted locally for the project:
+This directory contains **only** data that needs to be persisted locally for the project:
 
 - **Shell History**: Your zsh command history is preserved between container rebuilds
+
+**Note**: SSH, GPG, and Git configurations are mounted directly from your host system (`$HOME`), not stored here.
 
 ## 🔗 Host Configuration Strategy
 
@@ -45,8 +48,8 @@ The `setup-container.sh` script handles:
 For specific SSH configurations that don't work with agent forwarding:
 
 ```bash
-# SSH keys (if agent forwarding doesn't work)
-cp ~/.ssh/id_* .devcontainer/data/ssh/ 2>/dev/null || true
+# SSH keys (if agent forwarding doesn't work - rare case)
+# You would need to copy manually to container, not to this directory
 ```
 
 ### **Testing Your Setup:**
@@ -60,6 +63,17 @@ gpg --list-secret-keys --keyid-format LONG
 # Test Git signing (if configured)
 git config --get user.signingkey
 ```
+
+## 🚀 First Time Setup
+
+**Before starting the devcontainer for the first time**, run:
+
+```bash
+# From the project root
+./.devcontainer/init-data.sh
+```
+
+This creates the `zsh_history` file that Docker needs to mount.
 
 ## ✅ Benefits of This Approach
 
