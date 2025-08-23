@@ -15,7 +15,7 @@ The script handles the initial setup and configuration of the container environm
 
 1. **SSH Setup**: Creates `~/.ssh` with `700` permissions
 2. **GPG Setup**: Sets `700` for `~/.gnupg` directory and `600` for files
-3. **Zsh History**: Ensures proper permissions (`600`)
+3. **Shell History**: Managed automatically by `shell-history-per-project` feature
 4. **Environment Check**: Validates SSH_AUTH_SOCK and mounted configurations
 5. **Status Report**: Shows what's working and what might need attention
 
@@ -27,13 +27,15 @@ Container Start → setup-container.sh → bun install → Ready to use
 
 ## 🚀 First Time Setup
 
-**Before starting the devcontainer for the first time**, run:
+**Shell history is now automatically managed by the devcontainer feature.** No manual setup required!
+
+If you have existing shell history data in `.devcontainer/data/shell/`, you can migrate it to the new location:
 
 ```bash
-./.devcontainer/init-data.sh
+# Optional: Migrate existing history (if present)
+mkdir -p /workspaces/.shell-history
+cp .devcontainer/data/shell/zsh_history /workspaces/.shell-history/ 2>/dev/null || true
 ```
-
-This creates the necessary files (like `zsh_history`) that Docker needs to mount.
 
 ## 🛠️ Customization
 
