@@ -1,4 +1,3 @@
-import { readFile, writeFile } from "fs-extra";
 import { join } from "path";
 import { DIR } from "../../_constants";
 
@@ -10,47 +9,49 @@ import { DIR } from "../../_constants";
  * @param externalDependencies - The list of external package dependencies.
  */
 export async function prepareCategoryPackageJson(
-    buildCategoryDir: string,
-    category: string,
-    tsFiles: string[],
-    externalDependencies: string[] = []
+  buildCategoryDir: string,
+  category: string,
+  tsFiles: string[],
+  externalDependencies: string[] = []
 ) {
-    const rootPackageJson = await readFile(join(DIR.ROOT, "package.json"), "utf-8");
-    const rootPackageJsonContent = JSON.parse(rootPackageJson);
-    const version = rootPackageJsonContent.version;
+  // Use Bun's native JSON reading for both files
+  const rootPackage = await Bun.file(join(DIR.ROOT, "package.json")).json();
+  const templatePackage = await Bun.file(join(DIR.TEMPLATE_CATEGORY, "package.json")).json();
 
-    const packageJsonTemplate = await readFile(join(DIR.TEMPLATE_CATEGORY, "package.json"), "utf-8");
-    const methodsList = tsFiles.map(file => file.replace(".ts", "")).join('", "');
+  const version = rootPackage.version;
+  const methods = tsFiles.map(file => file.replace(".ts", ""));
 
-    let packageJsonContent = packageJsonTemplate
-        .replace(/{{category}}/g, category)
-        .replace(/{{methods}}/g, methodsList)
-        .replace(/{{version}}/g, version);
+  // Clone the template and update the values
+  const packageJson = {
+    ...templatePackage,
+    version,
+    name: templatePackage.name?.replace(/{{category}}/g, category),
+    description: templatePackage.description?.replace(/{{category}}/g, category),
+    keywords: templatePackage.keywords?.flatMap((keyword: string) =>
+      keyword === "{{category}}" ? category :
+        keyword === "{{methods}}" ? methods :
+          keyword
+    )
+  };
 
-    // Add peerDependencies if there are external dependencies
-    if (externalDependencies.length > 0) {
-        const packageJson = JSON.parse(packageJsonContent);
+  // Filter dependencies that exist in root package.json
+  const peerDependencies = externalDependencies
+    // Map to [dep, version] pairs
+    // The version comes from root package.json
+    .map(dep => [dep, rootPackage.dependencies?.[dep] || rootPackage.devDependencies?.[dep]])
+    // Filter out any dependencies that don't exist in the root package.json
+    .filter(([, version]) => !!version)
+    // Reduce to an object { dep: version }
+    .reduce<Record<string, string>>((acc, [dep, version]) => {
+      acc[dep] = version;
+      return acc;
+    }, {});
 
-        // Create peerDependencies object with versions from root package.json
-        const peerDependencies: Record<string, string> = {};
+  // Add peerDependencies only if there are any keys
+  if (Object.keys(peerDependencies).length > 0) {
+    packageJson.peerDependencies = peerDependencies;
+  }
 
-        for (const dep of externalDependencies) {
-            // Check in dependencies first, then devDependencies
-            const dependencyVersion = rootPackageJsonContent.dependencies?.[dep] ||
-                rootPackageJsonContent.devDependencies?.[dep];
-
-            if (dependencyVersion) {
-                peerDependencies[dep] = dependencyVersion;
-            }
-        }
-
-        // Only add peerDependencies if we found at least one version
-        if (Object.keys(peerDependencies).length > 0) {
-            packageJson.peerDependencies = peerDependencies;
-        }
-
-        packageJsonContent = JSON.stringify(packageJson, null, 2);
-    }
-
-    await writeFile(join(buildCategoryDir, "package.json"), packageJsonContent);
+  // Use Bun's native JSON writing
+  await Bun.write(join(buildCategoryDir, "package.json"), JSON.stringify(packageJson, null, 2));
 }
