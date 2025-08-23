@@ -17,15 +17,5 @@ docker images | grep helpers4 | awk '{print $3}' | xargs -r docker rmi -f
 echo "🗑️  Cleaning build cache..."
 docker system prune -f
 
-# Verify data structure
-echo "📁 Verifying data structure..."
-if [ -f "$PROJECT_PATH/.devcontainer/data/shell/zsh_history" ]; then
-    echo "   ✅ zsh_history file exists"
-else
-    echo "   ❌ zsh_history file missing, creating..."
-    mkdir -p "$PROJECT_PATH/.devcontainer/data/shell"
-    touch "$PROJECT_PATH/.devcontainer/data/shell/zsh_history"
-fi
-
 echo "✨ Cleanup complete!"
 echo "💡 You can now restart VS Code and 'Reopen in Container'"

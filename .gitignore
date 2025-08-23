@@ -7,7 +7,3 @@
 
 # Helpers
 /helpers/*/index.ts
-
-# DevContainer
-.devcontainer/data/
-!.devcontainer/data/README.md

@@ -17,11 +17,7 @@
       "version": "lts",
       "nodeGypDependencies": true
     },
-    "ghcr.io/baxyz/devcontainer-features/shell-history-per-project:0.0.2": {
-      "shell": "zsh",
-      "historyDirectory": "/workspaces/.shell-history",
-      "maxHistorySize": "10000"
-    }
+    "ghcr.io/baxyz/devcontainer-features/shell-history-per-project:0.0.5": {}
   },
   "customizations": {
     "vscode": {

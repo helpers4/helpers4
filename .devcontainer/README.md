@@ -25,18 +25,6 @@ The script handles the initial setup and configuration of the container environm
 Container Start → setup-container.sh → bun install → Ready to use
 ```
 
-## 🚀 First Time Setup
-
-**Shell history is now automatically managed by the devcontainer feature.** No manual setup required!
-
-If you have existing shell history data in `.devcontainer/data/shell/`, you can migrate it to the new location:
-
-```bash
-# Optional: Migrate existing history (if present)
-mkdir -p /workspaces/.shell-history
-cp .devcontainer/data/shell/zsh_history /workspaces/.shell-history/ 2>/dev/null || true
-```
-
 ## 🛠️ Customization
 
 You can modify this script to add:
