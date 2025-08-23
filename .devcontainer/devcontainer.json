@@ -59,7 +59,8 @@
         "editor.codeActionsOnSave": {
           "source.fixAll.eslint": "explicit"
         },
-        "bun.runtime": "bun"
+        "bun.runtime": "bun",
+        "npm.packageManager": "bun"
       }
     }
   },
