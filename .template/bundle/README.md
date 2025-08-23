@@ -28,6 +28,10 @@ This package includes all the following helpers4 categories:
 
 {{categories}}
 
+## Available Packages
+
+{{categories_table}}
+
 ## Individual Packages
 
 You can also install individual categories if you prefer:

@@ -9,7 +9,7 @@ A set of helpers for working with URLs.
 
 ## Documentation
 
-[https://helpers4.github.io/{{category}}](https://helpers4.github.io/{{category}})
+[https://helpers4.js.org/{{category}}](https://helpers4.js.org/{{category}})
 
 <!-- AUTOMATIC-METHODS -->
 - method
@@ -18,8 +18,14 @@ A set of helpers for working with URLs.
 ## See
 
 <!-- AUTOMATIC-SIBLINGS -->
-- [@helpers4/observable](https://www.npmjs.com/package/@helpers4/observable)
+- package
 <!-- /AUTOMATIC-SIBLINGS -->
+
+## All Available Packages
+
+<!-- AUTOMATIC-CATEGORIES-TABLE -->
+table
+<!-- /AUTOMATIC-CATEGORIES-TABLE -->
 
 ## Contributors
 

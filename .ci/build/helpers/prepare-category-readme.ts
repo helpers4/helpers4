@@ -6,6 +6,7 @@
 
 import { join } from "node:path";
 import { DIR } from "../../_constants";
+import { generateCategoriesTable } from "./categories-table.helper";
 
 /**
  * Copy and prepare the README.md file for the build category directory.
@@ -18,11 +19,13 @@ export async function prepareCategoryReadme(buildCategoryDir: string, category: 
     const readmeTemplate = await Bun.file(join(DIR.TEMPLATE_CATEGORY, "README.md")).text();
     const methodsList = tsFiles.map(file => `- ${file.replace(".ts", "")}`).join("\n");
     const siblingsList = categories.filter(cat => cat !== category).map(cat => `- [${cat}](../${cat})`).join("\n");
+    const categoriesTable = await generateCategoriesTable(categories);
 
     const readmeContent = readmeTemplate
         .replace(/{{category}}/g, category)
         .replace(/<!-- AUTOMATIC-METHODS -->[\s\S]*<!-- \/AUTOMATIC-METHODS -->/, `<!-- AUTOMATIC-METHODS -->\n${methodsList}\n<!-- /AUTOMATIC-METHODS -->`)
-        .replace(/<!-- AUTOMATIC-SIBLINGS -->[\s\S]*<!-- \/AUTOMATIC-SIBLINGS -->/, `<!-- AUTOMATIC-SIBLINGS -->\n${siblingsList}\n<!-- /AUTOMATIC-SIBLINGS -->`);
+        .replace(/<!-- AUTOMATIC-SIBLINGS -->[\s\S]*<!-- \/AUTOMATIC-SIBLINGS -->/, `<!-- AUTOMATIC-SIBLINGS -->\n${siblingsList}\n<!-- /AUTOMATIC-SIBLINGS -->`)
+        .replace(/<!-- AUTOMATIC-CATEGORIES-TABLE -->[\s\S]*<!-- \/AUTOMATIC-CATEGORIES-TABLE -->/, `<!-- AUTOMATIC-CATEGORIES-TABLE -->\n${categoriesTable}\n<!-- /AUTOMATIC-CATEGORIES-TABLE -->`);
 
     await Bun.write(join(buildCategoryDir, "README.md"), readmeContent);
 }
