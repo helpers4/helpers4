@@ -8,10 +8,14 @@ echo "📁 Setting up SSH directory..."
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 
-# Ensure zsh history file has correct permissions
-if [ -f ~/.zsh_history ]; then
-    echo "📝 Setting zsh history permissions..."
-    chmod 600 ~/.zsh_history
+# Set up shell history persistence
+if [ -d ~/.shell ]; then
+    echo "📝 Setting up shell history..."
+    # Create symlink for zsh history if it doesn't exist
+    if [ ! -L ~/.zsh_history ] && [ ! -f ~/.zsh_history ]; then
+        ln -sf ~/.shell/zsh_history ~/.zsh_history
+    fi
+    chmod 644 ~/.shell/zsh_history 2>/dev/null || true
 fi
 
 # Set up GPG directory permissions (if mounted)
