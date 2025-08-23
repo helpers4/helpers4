@@ -1,5 +1,4 @@
-import { readFile, writeFile } from "fs-extra";
-import { join } from "path";
+import { join } from "node:path";
 import { DIR } from "../../_constants";
 
 /**
@@ -10,7 +9,7 @@ import { DIR } from "../../_constants";
  * @param categories - The list of all categories.
  */
 export async function prepareCategoryReadme(buildCategoryDir: string, category: string, tsFiles: string[], categories: string[]) {
-    const readmeTemplate = await readFile(join(DIR.TEMPLATE_CATEGORY, "README.md"), "utf-8");
+    const readmeTemplate = await Bun.file(join(DIR.TEMPLATE_CATEGORY, "README.md")).text();
     const methodsList = tsFiles.map(file => `- ${file.replace(".ts", "")}`).join("\n");
     const siblingsList = categories.filter(cat => cat !== category).map(cat => `- [${cat}](../${cat})`).join("\n");
 
@@ -19,5 +18,5 @@ export async function prepareCategoryReadme(buildCategoryDir: string, category: 
         .replace(/<!-- AUTOMATIC-METHODS -->[\s\S]*<!-- \/AUTOMATIC-METHODS -->/, `<!-- AUTOMATIC-METHODS -->\n${methodsList}\n<!-- /AUTOMATIC-METHODS -->`)
         .replace(/<!-- AUTOMATIC-SIBLINGS -->[\s\S]*<!-- \/AUTOMATIC-SIBLINGS -->/, `<!-- AUTOMATIC-SIBLINGS -->\n${siblingsList}\n<!-- /AUTOMATIC-SIBLINGS -->`);
 
-    await writeFile(join(buildCategoryDir, "README.md"), readmeContent);
+    await Bun.write(join(buildCategoryDir, "README.md"), readmeContent);
 }

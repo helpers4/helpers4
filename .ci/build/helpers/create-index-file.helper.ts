@@ -1,5 +1,4 @@
-import { writeFile } from "fs-extra";
-import { join, basename } from "path";
+import { join, basename } from "node:path";
 
 /**
  * Create an index.ts file that exports all matched .ts files in the category.
@@ -17,6 +16,6 @@ export async function createIndexFile(categoryPath: string, tsFiles: string[]) {
         .join("\n")
         + "\n";
     const indexPath = join(categoryPath, "index.ts");
-    await writeFile(indexPath, indexContent, { flag: 'w' }); // 'w' flag to overwrite if exists
+    await Bun.write(indexPath, indexContent);
     return indexPath;
 }
