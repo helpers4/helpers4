@@ -4,7 +4,7 @@
  */
 import { expect, test } from "bun:test";
 import { firstValueFrom, of } from "rxjs";
-import { combineLatest } from "./combine";
+import { combineLatest } from "./combineLatest";
 
 test("combineLatest with array", async () => {
   const result = await firstValueFrom(combineLatest([of(1), of(2)]));

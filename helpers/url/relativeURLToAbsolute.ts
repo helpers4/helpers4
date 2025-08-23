@@ -3,6 +3,10 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
+import { withoutTrailingSlash } from "./withoutTrailingSlash";
+import { withLeadingSlash } from "./withLeadingSlash";
+import { cleanPath } from "./cleanPath";
+
 export function relativeURLToAbsolute(relativeUrl: string): string {
     return (
         withoutTrailingSlash(document.baseURI ?? window.location.origin) +
