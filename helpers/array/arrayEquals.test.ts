@@ -1,4 +1,11 @@
-import { arrayEquals } from './arrayEquals';
+/**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+import { describe, expect, it } from "bun:test";
+import { arrayEquals } from "./arrayEquals";
 
 describe('arrayEquals', () => {
     it('should return true if two arrays are identical', () => {

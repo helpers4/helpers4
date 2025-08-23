@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+
+/**
  * Coherency tests runner - validates the integrity of the build system
  */
 

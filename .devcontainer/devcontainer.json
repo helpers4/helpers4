@@ -47,7 +47,9 @@
         "moshfeu.compare-folders",
         // File Format Support
         "redhat.vscode-yaml",
-        "mechatroner.rainbow-csv"
+        "mechatroner.rainbow-csv",
+        // License Header Management (configured in .vscode/settings.json)
+        "psioniq.psi-header"
       ],
       "settings": {
         "typescript.preferences.useAliasesForRenames": false,

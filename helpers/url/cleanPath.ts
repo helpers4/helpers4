@@ -1,4 +1,10 @@
 /**
+ * This file is part of helpers4.
+ * Copyright (C) 2025 baxyz
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+/**
  * Clean an URL by removing duplicate slashes.
  * The protocol part of the URL is not modified.
  *
