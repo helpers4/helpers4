@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 
 /**
  * Directories used in the project.

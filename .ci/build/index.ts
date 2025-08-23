@@ -1,5 +1,6 @@
-import { emptyDir, ensureDir, readdir } from "fs-extra";
-import { join } from "path";
+import { emptyDir, ensureDir } from "fs-extra";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { DIR } from "../_constants";
 import {
   compileTypeScript,

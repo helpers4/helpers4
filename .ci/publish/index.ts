@@ -1,6 +1,6 @@
-import { readdir } from "fs-extra";
-import { join } from "path";
-import { exec } from "child_process";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
+import { exec } from "node:child_process";
 import { DIR } from "../_constants";
 
 async function main() {

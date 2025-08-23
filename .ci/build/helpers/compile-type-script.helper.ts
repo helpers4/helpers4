@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { exec } from "node:child_process";
 
 /**
  * Compile a TypeScript file using the bun build command.

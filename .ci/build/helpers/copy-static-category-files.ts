@@ -1,5 +1,5 @@
-import { copy } from "fs-extra";
-import { join } from "path";
+import { copyFile } from "node:fs/promises";
+import { join } from "node:path";
 import { DIR, TEMPLATE_CATEGORY_STATIC_FILES } from "../../_constants";
 
 /**
@@ -8,6 +8,6 @@ import { DIR, TEMPLATE_CATEGORY_STATIC_FILES } from "../../_constants";
  */
 export async function copyStaticCategoryFiles(buildCategoryDir: string) {
     for (const file of TEMPLATE_CATEGORY_STATIC_FILES) {
-        await copy(join(DIR.TEMPLATE_CATEGORY, file), join(buildCategoryDir, file));
+        await copyFile(join(DIR.TEMPLATE_CATEGORY, file), join(buildCategoryDir, file));
     }
 }

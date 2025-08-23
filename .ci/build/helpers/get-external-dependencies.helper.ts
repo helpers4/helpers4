@@ -3,8 +3,8 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { readFile, readdir } from "fs-extra";
-import { join } from "path";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { DIR } from "../../_constants";
 
 /**
@@ -23,7 +23,7 @@ export async function getExternalDependencies(categoryName: string): Promise<str
 
   for (const file of tsFiles) {
     const filePath = join(categoryPath, file);
-    const content = await readFile(filePath, 'utf8');
+    const content = await Bun.file(filePath).text();
 
     // Extract import statements
     const importRegex = /import\s+[^;]+from\s+['"]([^'"]+)['"]/g;
