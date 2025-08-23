@@ -5,6 +5,7 @@ import {
   compileTypeScript,
   copyStaticCategoryFiles,
   createIndexFile,
+  getExternalDependencies,
   prepareCategoryPackageJson,
   prepareCategoryReadme
 } from "./helpers";
@@ -43,8 +44,11 @@ async function main() {
       // Copy and prepare README.md
       await prepareCategoryReadme(buildCategoryDir, category, tsFiles, categories);
 
+      // Get external dependencies for this category
+      const externalDependencies = await getExternalDependencies(category);
+
       // Copy and prepare package.json
-      await prepareCategoryPackageJson(buildCategoryDir, category, tsFiles);
+      await prepareCategoryPackageJson(buildCategoryDir, category, tsFiles, externalDependencies);
 
       console.info(` ✔️📦 Built ${category}`);
     }
