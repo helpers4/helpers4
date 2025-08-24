@@ -9,6 +9,14 @@
     "url": "git+https://github.com/helpers4/helpers4.git"
   },
   "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    }
+  },
   "keywords": [
     "helpers",
     "{{category}}",
@@ -16,6 +24,7 @@
   ],
   "files": [
     "lib/index.js",
+    "lib/index.d.ts",
     "lib/index.js.map",
     "LICENSE.md",
     "package.json",

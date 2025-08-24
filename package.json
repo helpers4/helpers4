@@ -25,7 +25,7 @@
   "license": "AGPL-3.0",
   "scripts": {
     "preinstall": "node -e \"if(!process.env.npm_config_user_agent?.startsWith('bun')){console.log('Use bun as package manager');process.exit(1);}\"",
-    "test": "bun test libs/*/src/**/*.test.ts",
+    "test": "bun test helpers/**/*.test.ts",
     "build": "bun .ci/build/",
     "publish": "bun .ci/publish/",
     "publish:dry-run": "bun .ci/publish/ --dry-run",
@@ -52,9 +52,9 @@
     "simple-deepcompare": "^1.0.7"
   },
   "devDependencies": {
+    "@happy-dom/global-registrator": "^17.4.4",
     "@types/bun": "^1.2.8",
     "@types/fs-extra": "^11.0.4",
-    "@happy-dom/global-registrator": "^17.4.4",
     "bun-plugin-dts": "^0.3.0",
     "fs-extra": "^11.3.0"
   },
