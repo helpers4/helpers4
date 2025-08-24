@@ -142,7 +142,7 @@ async function validatePackages(packages: any[], config: PublishConfig): Promise
   let allValid = true;
 
   for (const pkg of packages) {
-    const issues = await validatePackageStructure(pkg.path);
+    const issues = await validatePackageStructure(pkg.path, pkg.isBundle);
 
     if (issues.length > 0) {
       console.error(`❌ Validation failed for ${pkg.name}:`);

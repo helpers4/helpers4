@@ -103,7 +103,7 @@ export function groupPackagesByType(packages: PackageMetadata[]): {
 /**
  * Validate package structure before publishing
  */
-export async function validatePackageStructure(packagePath: string): Promise<string[]> {
+export async function validatePackageStructure(packagePath: string, isBundle: boolean = false): Promise<string[]> {
   const issues: string[] = [];
 
   // Check required files
@@ -119,41 +119,63 @@ export async function validatePackageStructure(packagePath: string): Promise<str
   try {
     const packageJson = await fs.readJson(path.join(packagePath, 'package.json'));
 
-    const requiredFields = ['name', 'version', 'description', 'license', 'main', 'types'];
-    for (const field of requiredFields) {
+    // Basic fields required for all packages
+    const basicRequiredFields = ['name', 'version', 'description', 'license'];
+    for (const field of basicRequiredFields) {
       if (!packageJson[field]) {
         issues.push(`Missing required field in package.json: ${field}`);
       }
     }
 
-    // Check exports field for modern packages
-    if (!packageJson.exports) {
-      issues.push('Missing exports field in package.json');
+    // For category packages, check for code-related fields
+    if (!isBundle) {
+      const codeRequiredFields = ['main', 'types'];
+      for (const field of codeRequiredFields) {
+        if (!packageJson[field]) {
+          issues.push(`Missing required field in package.json: ${field}`);
+        }
+      }
+
+      // Check exports field for modern packages
+      if (!packageJson.exports) {
+        issues.push('Missing exports field in package.json');
+      }
+
+      // Check lib directory exists and has content
+      const libPath = path.join(packagePath, 'lib');
+      if (await fs.pathExists(libPath)) {
+        const libFiles = await fs.readdir(libPath);
+        if (libFiles.length === 0) {
+          issues.push('Empty lib directory');
+        }
+
+        // Check for index files
+        const hasIndexJs = libFiles.some(file => file === 'index.js');
+        const hasIndexDts = libFiles.some(file => file === 'index.d.ts');
+
+        if (!hasIndexJs) {
+          issues.push('Missing index.js in lib directory');
+        }
+        if (!hasIndexDts) {
+          issues.push('Missing index.d.ts in lib directory');
+        }
+      } else {
+        issues.push('Missing lib directory');
+      }
+    } else {
+      // For bundle packages, check for meta directory instead
+      const metaPath = path.join(packagePath, 'meta');
+      if (!await fs.pathExists(metaPath)) {
+        issues.push('Missing meta directory');
+      } else {
+        const metaFiles = await fs.readdir(metaPath);
+        if (metaFiles.length === 0) {
+          issues.push('Empty meta directory');
+        }
+      }
     }
   } catch (error) {
     issues.push(`Invalid package.json: ${error}`);
-  }
-
-  // Check lib directory exists and has content
-  const libPath = path.join(packagePath, 'lib');
-  if (await fs.pathExists(libPath)) {
-    const libFiles = await fs.readdir(libPath);
-    if (libFiles.length === 0) {
-      issues.push('Empty lib directory');
-    }
-
-    // Check for index files
-    const hasIndexJs = libFiles.some(file => file === 'index.js');
-    const hasIndexDts = libFiles.some(file => file === 'index.d.ts');
-
-    if (!hasIndexJs) {
-      issues.push('Missing index.js in lib directory');
-    }
-    if (!hasIndexDts) {
-      issues.push('Missing index.d.ts in lib directory');
-    }
-  } else {
-    issues.push('Missing lib directory');
   }
 
   return issues;
