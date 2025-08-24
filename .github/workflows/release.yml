@@ -14,11 +14,6 @@ on:
         - major
         - prerelease
         - auto
-      branch:
-        description: 'Target branch'
-        required: true
-        default: 'main'
-        type: string
 
 permissions:
   contents: write
@@ -33,7 +28,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,7 +84,7 @@ jobs:
         run: |
           git add package.json build/
           git commit -m "chore: release v${{ steps.version.outputs.new_version }}"
-          git push origin ${{ inputs.branch }}
+          git push origin HEAD
 
       - name: Create and push tag
         run: |
