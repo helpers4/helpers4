@@ -372,8 +372,12 @@ if (import.meta.url.endsWith(process.argv[1])) {
 
   updateAllPackageVersions(options)
     .then(result => {
-      console.log(`\n🎉 Version update completed!`);
-      console.log(`📦 ${result.oldVersion} → ${result.newVersion} (${result.versionType})`);
+      if (options.dryRun) {
+        console.log(result.newVersion);
+      } else {
+        console.log(`\n🎉 Version update completed!`);
+        console.log(`📦 ${result.oldVersion} → ${result.newVersion} (${result.versionType})`);
+      }
     })
     .catch(error => {
       console.error('\n❌ Version update failed:');

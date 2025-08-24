@@ -51,23 +51,19 @@ jobs:
       - name: Update version
         id: version
         run: |
-          # Determine version type and calculate new version
+          # Get current version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Calculate new version (dry-run mode outputs only the version number)
           if [[ "${{ inputs.version_type }}" == "auto" ]]; then
             echo "🤖 Auto-calculating version from git commits..."
-            RESULT=$(bun .ci/version/version-manager.ts --auto --dry-run 2>&1 | tail -1)
-            NEW_VERSION=$(echo "$RESULT" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+[^[:space:]]*')
-            CURRENT_VERSION=$(node -p "require('./package.json').version")
-            echo "Auto-calculated version: $NEW_VERSION"
+            NEW_VERSION=$(bun .ci/version/version-manager.ts --auto --dry-run)
           else
-            # Get current version
-            CURRENT_VERSION=$(node -p "require('./package.json').version")
-            echo "Current version: $CURRENT_VERSION"
-            
-            # Use explicit version manager for other types
-            RESULT=$(bun .ci/version/version-manager.ts ${{ inputs.version_type }} --dry-run 2>&1 | tail -1)
-            NEW_VERSION=$(echo "$RESULT" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+[^[:space:]]*')
-            echo "New version: $NEW_VERSION"
+            NEW_VERSION=$(bun .ci/version/version-manager.ts ${{ inputs.version_type }} --dry-run)
           fi
+          
+          echo "New version: $NEW_VERSION"
           
           # Actually update the version
           if [[ "${{ inputs.version_type }}" == "auto" ]]; then
