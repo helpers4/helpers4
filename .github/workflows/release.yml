@@ -59,11 +59,11 @@ jobs:
           
           echo "New version: $NEW_VERSION"
           
-          # Actually update the version
+          # Actually update the version (redirect output to avoid interference)
           if [[ "${{ inputs.version_type }}" == "auto" ]]; then
-            bun .ci/version/version-manager.ts --auto
+            bun .ci/version/version-manager.ts --auto > /dev/null
           else
-            bun .ci/version/version-manager.ts ${{ inputs.version_type }}
+            bun .ci/version/version-manager.ts ${{ inputs.version_type }} > /dev/null
           fi
           
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
