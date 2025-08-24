@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+        - prerelease
+        - auto
+      branch:
+        description: 'Target branch'
+        required: true
+        default: 'main'
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Update version
+        id: version
+        run: |
+          # Determine version type and calculate new version
+          if [[ "${{ inputs.version_type }}" == "auto" ]]; then
+            echo "🤖 Auto-calculating version from git commits..."
+            RESULT=$(bun .ci/version/version-manager.ts --auto --dry-run 2>&1 | tail -1)
+            NEW_VERSION=$(echo "$RESULT" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+[^[:space:]]*')
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "Auto-calculated version: $NEW_VERSION"
+          else
+            # Get current version
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            echo "Current version: $CURRENT_VERSION"
+            
+            # Use explicit version manager for other types
+            RESULT=$(bun .ci/version/version-manager.ts ${{ inputs.version_type }} --dry-run 2>&1 | tail -1)
+            NEW_VERSION=$(echo "$RESULT" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+[^[:space:]]*')
+            echo "New version: $NEW_VERSION"
+          fi
+          
+          # Actually update the version
+          if [[ "${{ inputs.version_type }}" == "auto" ]]; then
+            bun .ci/version/version-manager.ts --auto
+          else
+            bun .ci/version/version-manager.ts ${{ inputs.version_type }}
+          fi
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build packages
+        run: bun run build
+
+      - name: Run coherency tests
+        run: bun .ci/coherency/
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Commit version changes
+        run: |
+          git add package.json build/
+          git commit -m "chore: release v${{ steps.version.outputs.new_version }}"
+          git push origin ${{ inputs.branch }}
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ steps.version.outputs.new_version }}"
+          git push origin "v${{ steps.version.outputs.new_version }}"
+
+      - name: Setup NPM authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          npm whoami
+
+      - name: Publish packages
+        run: |
+          # Use the new enhanced publishing system
+          echo "🚀 Starting enhanced NPM publication process..."
+          
+          # Run with transaction safety and retry logic
+          bun .ci/publish/ --access public --retries 3 --retry-delay 30 --verbose
+          
+          echo "🎉 All packages published successfully with transaction safety!"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: Release v${{ steps.version.outputs.new_version }}
+          body: |
+            ## Changes in v${{ steps.version.outputs.new_version }}
+            
+            This release bumps the version from ${{ steps.version.outputs.current_version }} to ${{ steps.version.outputs.new_version }}.
+            
+            ### Package Structure
+            - **Category packages**: Individual helper categories published separately
+            - **Bundle package**: Complete helpers4 bundle with all categories
+            
+            ### Published Packages
+            All packages are published to NPM registry with public access.
+            
+            ---
+            
+            For detailed changes, see the commit history.
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.new_version, 'alpha') || contains(steps.version.outputs.new_version, 'beta') }}
