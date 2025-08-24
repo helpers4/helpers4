@@ -12,33 +12,88 @@
  */
 
 import { testBundle } from "./test-bundle";
+import { testVersionConsistency } from "./test-version-consistency";
+import { testCategoryPackages } from "./test-category-packages";
+import { testDependenciesCoherency } from "./test-dependencies-coherency";
+
+interface CoherencyTest {
+  name: string;
+  description: string;
+  testFunction: () => Promise<void | boolean>;
+}
+
+const coherencyTests: CoherencyTest[] = [
+  {
+    name: "Bundle Package",
+    description: "Tests the main bundle package integrity",
+    testFunction: testBundle
+  },
+  {
+    name: "Version Consistency",
+    description: "Ensures all packages have consistent versions",
+    testFunction: testVersionConsistency
+  },
+  {
+    name: "Category Packages",
+    description: "Validates category packages structure and content",
+    testFunction: testCategoryPackages
+  },
+  {
+    name: "Dependencies Coherency",
+    description: "Checks dependencies consistency across packages",
+    testFunction: testDependenciesCoherency
+  }
+];
 
 async function runCoherencyTests() {
   console.log("🔍 Running coherency tests...\n");
 
   let allPassed = true;
+  const results: { name: string; passed: boolean; error?: Error }[] = [];
 
-  // Run bundle tests
-  try {
-    console.log("📦 Testing bundle package:");
-    await testBundle();
-  } catch (error) {
-    console.error("❌ Bundle test failed:", error);
-    allPassed = false;
+  for (const test of coherencyTests) {
+    try {
+      console.log(`🧪 ${test.name}:`);
+      console.log(`   ${test.description}`);
+      const result = await test.testFunction();
+
+      // Handle both void and boolean returns
+      if (result === false) {
+        throw new Error(`Test ${test.name} returned false`);
+      }
+
+      console.log(`✅ ${test.name} passed\n`);
+      results.push({ name: test.name, passed: true });
+    } catch (error) {
+      console.error(`❌ ${test.name} failed:`, error instanceof Error ? error.message : error);
+      console.log("");
+      allPassed = false;
+      results.push({ name: test.name, passed: false, error: error as Error });
+    }
   }
 
-  // Future coherency tests can be added here
-  // - Test category packages integrity
-  // - Test version consistency
-  // - Test dependencies coherency
-  // - etc.
+  // Print summary
+  console.log("\n" + "=".repeat(60));
+  console.log("📊 Coherency Tests Summary:");
+  console.log("=".repeat(60));
 
-  console.log("\n" + "=".repeat(50));
+  for (const result of results) {
+    const status = result.passed ? "✅ PASSED" : "❌ FAILED";
+    console.log(`${status} - ${result.name}`);
+    if (!result.passed && result.error) {
+      console.log(`    Error: ${result.error.message}`);
+    }
+  }
+
+  console.log("=".repeat(60));
+  const passedCount = results.filter(r => r.passed).length;
+  const totalCount = results.length;
+
   if (allPassed) {
-    console.log("✅ All coherency tests passed!");
+    console.log(`🎉 All ${totalCount} coherency tests passed!`);
     process.exit(0);
   } else {
-    console.log("❌ Some coherency tests failed!");
+    console.log(`💥 ${totalCount - passedCount}/${totalCount} coherency tests failed!`);
     process.exit(1);
   }
 }

@@ -12,7 +12,6 @@
  */
 
 import { join } from "node:path";
-import { readdir } from "node:fs/promises";
 
 async function testBundle() {
   console.log("🧪 Testing @helpers4/all bundle package...");
