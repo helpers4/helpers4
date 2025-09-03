@@ -55,7 +55,6 @@
     "@happy-dom/global-registrator": "^17.4.4",
     "@types/bun": "^1.2.8",
     "@types/fs-extra": "^11.0.4",
-    "bun-plugin-dts": "^0.3.0",
     "fs-extra": "^11.3.0"
   },
   "packageManager": "bun@1.2.20"

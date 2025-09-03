@@ -7,7 +7,8 @@
 import { join, basename } from "node:path";
 
 /**
- * Create an index.ts file that exports all matched .ts files in the category.
+ * Create an index.ts file that re-exports all matched .ts files in the category.
+ * Uses simple re-exports which work well with our bundling approach.
  * 
  * Note: the .gitignore rules should ignore this index.ts file, so it doesn't
  * get committed.
@@ -17,10 +18,11 @@ import { join, basename } from "node:path";
  * @returns The path of the created index.ts file.
  */
 export async function createIndexFile(categoryPath: string, tsFiles: string[]) {
+    // Create simple re-exports for all files
     const indexContent = tsFiles
         .map(file => `export * from './${basename(file, ".ts")}';`)
-        .join("\n")
-        + "\n";
+        .join("\n") + "\n";
+
     const indexPath = join(categoryPath, "index.ts");
     await Bun.write(indexPath, indexContent);
     return indexPath;

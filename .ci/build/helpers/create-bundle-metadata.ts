@@ -56,7 +56,6 @@ export async function createBundleMetadata(
     version: stripV(rootPackage.version),
     categories: categories.sort(),
     totalCategories: categories.length,
-    radashiVersion: stripV(rootPackage.dependencies?.radashi || rootPackage.devDependencies?.radashi || null),
     buildTool: "bun",
     bunVersion: bunVersion ? stripV(bunVersion) : null,
     nodeVersion: stripV(process.version),
