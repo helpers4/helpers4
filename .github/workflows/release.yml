@@ -25,11 +25,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Get GitHub App Token
+        id: get_token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ vars.PUSHINATOR_ID }}
+          private_key: ${{ secrets.PUSHINATOR_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
+          token: ${{ steps.get_token.outputs.token }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
