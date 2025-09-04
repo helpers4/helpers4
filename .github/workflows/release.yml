@@ -133,17 +133,33 @@ jobs:
           prerelease: ${{ contains(steps.version.outputs.new_version, 'alpha') || contains(steps.version.outputs.new_version, 'beta') }}
           token: ${{ steps.get_token.outputs.token }}
 
+      - name: Get Trigganator App Token
+        id: get_docs_token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ vars.TRIGGANATOR_ID }}
+          private_key: ${{ secrets.TRIGGANATOR_KEY }}
+
       - name: Trigger Documentation Update
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.DOCS_UPDATE_TOKEN }}
+          token: ${{ steps.get_docs_token.outputs.token }}
           repository: helpers4/doc
           event-type: new-release
           client-payload: |
             {
               "version": "${{ steps.version.outputs.new_version }}",
-              "library_version": "${{ steps.version.outputs.new_version }}",
-              "release_url": "${{ steps.create_release.outputs.html_url }}",
               "tag_name": "v${{ steps.version.outputs.new_version }}",
-              "prerelease": ${{ contains(steps.version.outputs.new_version, 'alpha') || contains(steps.version.outputs.new_version, 'beta') }}
+              "release_url": "${{ steps.create_release.outputs.url }}",
+              "prerelease": ${{ contains(steps.version.outputs.new_version, 'alpha') || contains(steps.version.outputs.new_version, 'beta') }},
+              "repository": "helpers4/helpers4",
+              "commit_sha": "${{ github.sha }}",
+              "triggered_by": "${{ github.actor }}"
             }
+
+      - name: Verify Documentation Trigger
+        run: |
+          echo "✅ Documentation update triggered successfully"
+          echo "📦 Version: ${{ steps.version.outputs.new_version }}"
+          echo "📄 Documentation repository: helpers4/doc"
+          echo "🔗 Release URL: ${{ steps.create_release.outputs.url }}"
