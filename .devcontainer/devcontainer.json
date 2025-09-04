@@ -1,5 +1,5 @@
 {
-  "name": "Helpers4 Bun",
+  "name": "Helpers4",
   "image": "oven/bun:latest",
   "features": {
     "ghcr.io/devcontainers/features/git:1": {
