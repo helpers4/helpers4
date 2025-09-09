@@ -3,6 +3,20 @@
 The `@helpers4` are a collection of helper functions for use in any project, whatever the framework.
 Every helper is a standalone module and supports tree-shaking, so you can use only the helpers you need without embedding the whole library.
 
+## Project Context
+
+**Index and Naming**: All functions are automatically exported in their respective module's `index.ts` file during build. All comparison functions follow uniform naming conventions (e.g., `quickCompare`, `deepCompare`, `compare`) within their respective modules (object, array, date, etc.), ensuring consistency across the library.
+
+**Modular Architecture**: Each helper category is organized in its own folder with specific functionality:
+
+- **object/**: Object manipulation and comparison
+- **array/**: Array operations and comparison  
+- **date/**: Date utilities, comparison, and checks
+- **string/**: String manipulation helpers
+- **number/**: Numeric operations
+- **promise/**: Promise utilities
+- **observable/**: RxJS Observable helpers
+
 ## @helpers4/url
 
 A set of helpers for working with URLs.
