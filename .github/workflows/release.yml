@@ -141,23 +141,25 @@ jobs:
           private_key: ${{ secrets.TRIGGANATOR_KEY }}
 
       - name: Trigger Documentation Update
+        id: trigger_docs
+        continue-on-error: true
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ steps.get_docs_token.outputs.token }}
           repository: helpers4/doc
           event-type: new-release
-          client-payload: |
-            {
-              "version": "${{ steps.version.outputs.new_version }}",
-              "tag_name": "v${{ steps.version.outputs.new_version }}",
-              "release_url": "${{ steps.create_release.outputs.url }}",
-              "prerelease": ${{ contains(steps.version.outputs.new_version, 'alpha') || contains(steps.version.outputs.new_version, 'beta') }},
-              "repository": "helpers4/helpers4",
-              "commit_sha": "${{ github.sha }}",
-              "triggered_by": "${{ github.actor }}"
-            }
+          client-payload: '{"version": "${{ steps.version.outputs.new_version }}"}'
+
+      - name: Handle Documentation Trigger Failure
+        if: steps.trigger_docs.outcome == 'failure'
+        run: |
+          echo "⚠️  WARNING: Documentation update trigger failed"
+          echo "📦 Version: ${{ steps.version.outputs.new_version }}"
+          echo "📄 Please manually trigger documentation update for helpers4/doc"
+          echo "🔗 Release URL: ${{ steps.create_release.outputs.url }}"
 
       - name: Verify Documentation Trigger
+        if: steps.trigger_docs.outcome == 'success'
         run: |
           echo "✅ Documentation update triggered successfully"
           echo "📦 Version: ${{ steps.version.outputs.new_version }}"
