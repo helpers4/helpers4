@@ -59,9 +59,9 @@ jobs:
           # Update the version
           if [[ "${{ inputs.version_type }}" == "auto" ]]; then
             echo "🤖 Auto-calculating version from git commits..."
-            bun .ci/version/version-manager.ts --auto
+            bun scripts/version/version-manager.ts --auto
           else
-            bun .ci/version/version-manager.ts ${{ inputs.version_type }}
+            bun scripts/version/version-manager.ts ${{ inputs.version_type }}
           fi
           
           # Get the new version from package.json after update
@@ -75,7 +75,7 @@ jobs:
         run: bun run build
 
       - name: Run coherency tests
-        run: bun .ci/coherency/
+        run: bun scripts/coherency/
 
       - name: Configure Git
         run: |
@@ -104,7 +104,7 @@ jobs:
           echo "🚀 Starting enhanced NPM publication process..."
           
           # Run with transaction safety and retry logic
-          bun .ci/publish/ --access public --retries 3 --retry-delay 30 --verbose
+          bun scripts/publish/ --access public --retries 3 --retry-delay 30 --verbose
           
           echo "🎉 All packages published successfully with transaction safety!"
 
