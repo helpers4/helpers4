@@ -26,9 +26,23 @@ env:
   ARTIFACT_BUILD: release-build-output-${{ github.run_id }}
 
 jobs:
+  # Security check: Only allow release on main repository
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check repository ownership
+        run: |
+          if [ "${{ github.repository }}" != "helpers4/helpers4" ]; then
+            echo "::error::Release workflow can only be executed on the main repository helpers4/helpers4"
+            echo "Current repository: ${{ github.repository }}"
+            exit 1
+          fi
+          echo "✅ Repository ownership verified: ${{ github.repository }}"
+
   # Version calculation and update job
   version-update:
     runs-on: ubuntu-latest
+    needs: security-check
     
     outputs:
       current-version: ${{ steps.version.outputs.current-version }}
@@ -102,7 +116,7 @@ jobs:
   # Build and test job (depends on version update)
   build-and-test:
     runs-on: ubuntu-latest
-    needs: version-update
+    needs: [security-check, version-update]
     if: needs.version-update.outputs.version-changed == 'true'
     
     steps:
@@ -149,7 +163,7 @@ jobs:
   # Release job (depends on build and test)
   release:
     runs-on: ubuntu-latest
-    needs: [version-update, build-and-test]
+    needs: [security-check, version-update, build-and-test]
     if: needs.version-update.outputs.version-changed == 'true'
     
     steps:
