@@ -1,0 +1,114 @@
+name: "PR Comment"
+description: "Generate and update comprehensive PR comment with job statuses"
+
+inputs:
+  github-token:
+    description: "GitHub token for API access"
+    required: true
+
+  version-status:
+    description: "Version calculation status"
+    required: false
+    default: "unknown"
+
+  build-status:
+    description: "Build status"
+    required: false
+    default: "unknown"
+
+  security-status:
+    description: "Security audit status"
+    required: false
+    default: "unknown"
+
+  security-scan-status:
+    description: "Security scan status"
+    required: false
+    default: "unknown"
+
+  lint-status:
+    description: "Lint status"
+    required: false
+    default: "unknown"
+
+  typecheck-status:
+    description: "TypeScript check status"
+    required: false
+    default: "unknown"
+
+  commit-status:
+    description: "Commit validation status"
+    required: false
+    default: "unknown"
+
+  coherency-status:
+    description: "Coherency check status"
+    required: false
+    default: "unknown"
+
+  bundle-size-status:
+    description: "Bundle size status"
+    required: false
+    default: "unknown"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate PR comment
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        # Function to get status emoji
+        get_status_emoji() {
+          case $1 in
+            "success") echo "✅" ;;
+            "failure") echo "❌" ;;
+            "skipped") echo "⏭️" ;;
+            *) echo "⏳" ;;
+          esac
+        }
+
+        # Generate comment content
+        cat > comment.md << 'EOF'
+        ## 🔍 Pull Request Validation Results
+
+        | Check | Status | Result |
+        |-------|--------|---------|
+        | 📦 Version Calculation | $(get_status_emoji "${{ inputs.version-status }}") | ${{ inputs.version-status }} |
+        | 🏗️ Build & Test | $(get_status_emoji "${{ inputs.build-status }}") | ${{ inputs.build-status }} |
+        | 🔒 Security Audit | $(get_status_emoji "${{ inputs.security-status }}") | ${{ inputs.security-status }} |
+        | 🛡️ Security Scan | $(get_status_emoji "${{ inputs.security-scan-status }}") | ${{ inputs.security-scan-status }} |
+        | 🎨 Code Style | $(get_status_emoji "${{ inputs.lint-status }}") | ${{ inputs.lint-status }} |
+        | 📝 TypeScript | $(get_status_emoji "${{ inputs.typecheck-status }}") | ${{ inputs.typecheck-status }} |
+        | 💬 Commit Format | $(get_status_emoji "${{ inputs.commit-status }}") | ${{ inputs.commit-status }} |
+        | 🔗 Coherency | $(get_status_emoji "${{ inputs.coherency-status }}") | ${{ inputs.coherency-status }} |
+        | 📊 Bundle Size | $(get_status_emoji "${{ inputs.bundle-size-status }}") | ${{ inputs.bundle-size-status }} |
+
+        ---
+
+        **Workflow ID**: `${{ github.run_id }}`  
+        **Last Updated**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+        > This comment is automatically updated as checks complete.
+        EOF
+
+        # Process the comment to expand variables
+        eval "cat << 'FINAL_EOF'
+        $(cat comment.md)
+        FINAL_EOF" > final_comment.md
+
+        # Find existing comment
+        COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+          --jq '.[] | select(.body | contains("🔍 Pull Request Validation Results")) | .id' || echo "")
+
+        if [ -n "$COMMENT_ID" ]; then
+          echo "Updating existing comment ID: $COMMENT_ID"
+          gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
+            --method PATCH \
+            --field body@final_comment.md
+        else
+          echo "Creating new comment"
+          gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            --field body@final_comment.md
+        fi
