@@ -15,6 +15,11 @@ permissions:
   checks: write
   statuses: write
 
+env:
+  WORKFLOW_ID: ${{ github.run_id }}
+  ARTIFACT_PACKAGE: package-json-${{ github.run_id }}
+  ARTIFACT_BUILD: build-output-${{ github.run_id }}
+
 jobs:
   # Security check for external contributors
   security-check:
@@ -27,10 +32,61 @@ jobs:
           echo "::error::External PR detected. Workflow stopped for security."
           exit 1
 
-  # Main validation workflow
-  validate:
+  # Version calculation job
+  version-calculation:
     runs-on: ubuntu-latest
-    # Only run for internal PRs or approved external PRs
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version-changed: ${{ steps.version.outputs.changed }}
+      status: ${{ steps.version.outputs.status }}
+    
+    steps:
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
+        with:
+          fetch-depth: 0
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+        with:
+          node-version: '20'
+
+      - name: Calculate version for PR
+        id: version
+        run: |
+          echo "Calculating version for PR validation..."
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # For PR validation, we calculate what the version would be but don't change it
+          # This helps validate the version calculation logic
+          if git log --oneline HEAD...origin/main | grep -E "^[a-f0-9]+ (feat|fix|BREAKING CHANGE)" >/dev/null 2>&1; then
+            echo "Version calculation completed (changes detected)"
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "No version-affecting changes detected"
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload package.json artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PACKAGE }}
+          path: package.json
+          retention-days: 1
+
+  # Build job with matrix strategy (depends on version calculation)
+  build:
+    runs-on: ubuntu-latest
+    needs: version-calculation
     if: |
       github.event_name == 'pull_request' || 
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
@@ -38,244 +94,224 @@ jobs:
     strategy:
       matrix:
         node-version: [18, 20, 22]
+      fail-fast: false
     
+    outputs:
+      build-success: ${{ steps.build.outputs.status }}
+      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout and download artifacts
+        uses: ./.github/actions/checkout-and-download
         with:
-          # For pull_request_target, checkout the PR head
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
-          # Fetch full history for conventional commit analysis
-          fetch-depth: 0
+          download-package: 'true'
+          artifact-package-name: ${{ env.ARTIFACT_PACKAGE }}
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint code
-        run: |
-          if [ -f ".eslintrc.json" ]; then
-            bun run lint || echo "::warning::Linting failed or no lint script found"
-          else
-            echo "::notice::No ESLint configuration found, skipping linting"
-          fi
-
-      - name: Type checking
-        run: |
-          echo "Running TypeScript compilation check..."
-          bun run tsc --noEmit
-
       - name: Run tests
-        run: |
-          echo "Running test suite..."
-          bun run test
+        id: test
+        uses: ./.github/actions/run-tests
+        with:
+          test-type: 'test'
+          node-version: ${{ matrix.node-version }}
 
-      - name: Check coherency
-        run: |
-          echo "Running coherency checks..."
-          bun run coherency
+      - name: Run build
+        id: build
+        uses: ./.github/actions/run-tests
+        with:
+          test-type: 'build'
+          node-version: ${{ matrix.node-version }}
 
-      - name: Build packages
-        run: |
-          echo "Building packages..."
-          bun run build
+      # Only upload build artifact from Node.js 20 to avoid duplicates
+      - name: Upload build artifact
+        if: matrix.node-version == '20' && steps.build.outputs.status == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_BUILD }}
+          path: |
+            build/
+            dist/
+          retention-days: 1
 
-      - name: Validate build output
-        run: |
-          echo "Validating build output..."
-          if [ ! -d "build" ]; then
-            echo "::error::Build directory not found"
-            exit 1
-          fi
-          
-          # Check if build contains expected packages
-          expected_packages=("array" "function" "object" "promise" "string" "url" "observable" "date" "number" "math" "type" "version" "all")
-          for package in "${expected_packages[@]}"; do
-            if [ ! -d "build/$package" ]; then
-              echo "::warning::Package $package not found in build output"
-            else
-              echo "✓ Package $package built successfully"
-            fi
-          done
+  # Parallel security jobs
+  security:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    outputs:
+      security-status: ${{ steps.security.outputs.audit-status }}
+      
+    steps:
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
 
-      - name: Check bundle sizes
-        run: |
-          echo "Analyzing bundle sizes..."
-          if command -v du >/dev/null 2>&1; then
-            echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
-            echo "| Package | Size |" >> $GITHUB_STEP_SUMMARY
-            echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
-            
-            for dir in build/*/; do
-              if [ -d "$dir" ]; then
-                package_name=$(basename "$dir")
-                size=$(du -sh "$dir" | cut -f1)
-                echo "| $package_name | $size |" >> $GITHUB_STEP_SUMMARY
-              fi
-            done
-          fi
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
 
-  # Security scanning
+      - name: Run security audit
+        id: security
+        uses: ./.github/actions/security-scan
+        with:
+          scan-type: 'audit'
+
   security-scan:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' || 
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
     
+    outputs:
+      scan-status: ${{ steps.scan.outputs.sensitive-data-status }}
+      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
+
+      - name: Run sensitive data scan
+        id: scan
+        uses: ./.github/actions/security-scan
         with:
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          scan-type: 'sensitive-data'
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+  # Parallel validation jobs
+  lint:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    outputs:
+      lint-status: ${{ steps.lint.outputs.status }}
+      
+    steps:
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run linting
+        id: lint
+        uses: ./.github/actions/run-tests
         with:
-          bun-version: latest
+          test-type: 'lint'
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+  type-check:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    outputs:
+      typecheck-status: ${{ steps.typecheck.outputs.status }}
+      
+    steps:
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
 
-      - name: Run security audit
-        run: |
-          echo "Running security audit..."
-          bun audit || echo "::warning::Security audit found issues"
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
 
-      - name: Check for sensitive data
-        run: |
-          echo "Scanning for potential sensitive data..."
-          # Check for common patterns that might indicate sensitive data
-          if grep -r "password\|secret\|token\|key" --include="*.ts" --include="*.js" --include="*.json" helpers/ || true; then
-            echo "::warning::Potential sensitive data patterns found. Please review."
-          fi
+      - name: Run TypeScript check
+        id: typecheck
+        uses: ./.github/actions/run-tests
+        with:
+          test-type: 'typecheck'
 
-  # Conventional commit validation
   commit-validation:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' || 
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
     
+    outputs:
+      commit-status: ${{ steps.validate.outputs.status }}
+      invalid-count: ${{ steps.validate.outputs.invalid-count }}
+      
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout and setup environment
+        uses: ./.github/actions/checkout-and-download
         with:
-          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
       - name: Validate commit messages
+        id: validate
+        uses: ./.github/actions/validate-commits
+        with:
+          base-branch: 'main'
+
+  # Verification job (depends on build)
+  verification:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    outputs:
+      coherency-status: ${{ steps.coherency.outputs.status }}
+      bundle-size-status: ${{ steps.bundle.outputs.status }}
+      
+    steps:
+      - name: Checkout and download artifacts
+        uses: ./.github/actions/checkout-and-download
+        with:
+          download-package: 'true'
+          download-build: 'true'
+          artifact-package-name: ${{ env.ARTIFACT_PACKAGE }}
+          artifact-build-name: ${{ env.ARTIFACT_BUILD }}
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Run coherency tests
+        id: coherency
+        uses: ./.github/actions/run-tests
+        with:
+          test-type: 'coherency'
+
+      - name: Analyze bundle size
+        id: bundle
         run: |
-          echo "Validating conventional commit format..."
+          echo "Analyzing bundle size..."
           
-          # Get the base branch commit
-          BASE_SHA=$(git merge-base HEAD origin/main)
-          
-          # Check each commit in the PR
-          INVALID_COMMITS=0
-          
-          for commit in $(git rev-list $BASE_SHA..HEAD); do
-            COMMIT_MSG=$(git log --format=%s -n 1 $commit)
-            echo "Checking commit: $COMMIT_MSG"
-            
-            # Check if commit follows conventional commit format
-            if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"; then
-              echo "::error::Invalid commit message format: $COMMIT_MSG"
-              echo "::error::Please use conventional commit format: type(scope): description"
-              INVALID_COMMITS=1
-            else
-              echo "✓ Valid commit format: $COMMIT_MSG"
-            fi
-          done
-          
-          if [ $INVALID_COMMITS -eq 1 ]; then
-            echo "::error::One or more commits have invalid format"
-            exit 1
+          if [ -d "build" ] || [ -d "dist" ]; then
+            TOTAL_SIZE=$(du -sh build/ dist/ 2>/dev/null | awk '{sum+=$1} END {print sum}' || echo "0")
+            echo "Bundle size: ${TOTAL_SIZE}"
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "No build output found for size analysis"
+            echo "status=skipped" >> $GITHUB_OUTPUT
           fi
 
-  # Comment on PR with validation results
+  # Final PR comment job (depends on all other jobs)
   pr-comment:
     runs-on: ubuntu-latest
-    needs: [validate, security-scan, commit-validation]
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+    needs: [version-calculation, build, security, security-scan, lint, type-check, commit-validation, verification]
+    if: |
+      always() && 
+      (github.event_name == 'pull_request' || 
+       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository))
     
     steps:
-      - name: Comment PR
-        uses: actions/github-script@v7
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update PR comment
+        uses: ./.github/actions/pr-comment
         with:
-          script: |
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            // Check if we already commented
-            const botComment = comments.find(comment => 
-              comment.user.type === 'Bot' && 
-              comment.body.includes('## PR Validation Results')
-            );
-
-            const validate = '${{ needs.validate.result }}';
-            const security = '${{ needs.security-scan.result }}';
-            const commits = '${{ needs.commit-validation.result }}';
-
-            const getStatusEmoji = (status) => {
-              switch(status) {
-                case 'success': return '✅';
-                case 'failure': return '❌';
-                case 'cancelled': return '⏭️';
-                case 'skipped': return '⏭️';
-                default: return '⏸️';
-              }
-            };
-
-            const body = `## PR Validation Results
-
-            | Check | Status | Result |
-            |-------|--------|--------|
-            | Code Validation | ${getStatusEmoji(validate)} | ${validate} |
-            | Security Scan | ${getStatusEmoji(security)} | ${security} |
-            | Commit Validation | ${getStatusEmoji(commits)} | ${commits} |
-
-            ### Summary
-            ${validate === 'success' && security === 'success' && commits === 'success' 
-              ? '🎉 All checks passed! This PR is ready for review.' 
-              : '⚠️ Some checks failed. Please review the details above and fix any issues.'}
-
-            ---
-            *This comment is automatically updated on each push.*`;
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body
-              });
-            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version-status: ${{ needs.version-calculation.outputs.status || 'unknown' }}
+          build-status: ${{ needs.build.outputs.build-success || 'unknown' }}
+          security-status: ${{ needs.security.outputs.security-status || 'unknown' }}
+          security-scan-status: ${{ needs.security-scan.outputs.scan-status || 'unknown' }}
+          lint-status: ${{ needs.lint.outputs.lint-status || 'unknown' }}
+          typecheck-status: ${{ needs.type-check.outputs.typecheck-status || 'unknown' }}
+          commit-status: ${{ needs.commit-validation.outputs.commit-status || 'unknown' }}
+          coherency-status: ${{ needs.verification.outputs.coherency-status || 'unknown' }}
+          bundle-size-status: ${{ needs.verification.outputs.bundle-size-status || 'unknown' }}

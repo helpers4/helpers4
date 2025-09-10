@@ -1,0 +1,109 @@
+name: "Version Manager"
+description: "Calculate and update version based on conventional commits or manual input"
+
+inputs:
+  version-type:
+    description: "Version bump type (patch, minor, major, prerelease, auto)"
+    required: true
+    default: "auto"
+
+outputs:
+  current-version:
+    description: "Current version before update"
+    value: ${{ steps.version.outputs.current_version }}
+
+  new-version:
+    description: "New version after update"
+    value: ${{ steps.version.outputs.new_version }}
+
+  version-changed:
+    description: "Whether version was changed"
+    value: ${{ steps.version.outputs.changed }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate and update version
+      id: version
+      shell: bash
+      run: |
+        CURRENT_VERSION=$(node -p "require('./package.json').version")
+        echo "Current version: $CURRENT_VERSION"
+        echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+        if [ "${{ inputs.version-type }}" = "auto" ]; then
+          echo "Auto-detecting version bump type from commits..."
+          
+          # Get commits since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            COMMITS=$(git log $LAST_TAG..HEAD --oneline)
+          else
+            COMMITS=$(git log --oneline)
+          fi
+          
+          # Determine version bump type
+          if echo "$COMMITS" | grep -q "BREAKING CHANGE\|!:"; then
+            BUMP_TYPE="major"
+          elif echo "$COMMITS" | grep -q "^[a-f0-9]* feat"; then
+            BUMP_TYPE="minor"
+          elif echo "$COMMITS" | grep -q "^[a-f0-9]* fix"; then
+            BUMP_TYPE="patch"
+          else
+            echo "No version-affecting changes found"
+            echo "new_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Auto-detected bump type: $BUMP_TYPE"
+        else
+          BUMP_TYPE="${{ inputs.version-type }}"
+          echo "Manual bump type: $BUMP_TYPE"
+        fi
+
+        # Calculate new version
+        case $BUMP_TYPE in
+          "major")
+            NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1+1".0.0"}')
+            ;;
+          "minor")
+            NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2+1".0"}')
+            ;;
+          "patch")
+            NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1}')
+            ;;
+          "prerelease")
+            if echo $CURRENT_VERSION | grep -q "beta\|alpha\|rc"; then
+              # Increment existing prerelease
+              NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{
+                if ($3 ~ /beta|alpha|rc/) {
+                  sub(/[0-9]+$/, "", $3)
+                  num = $3
+                  gsub(/[^0-9]/, "", num)
+                  num = (num == "" ? 0 : num) + 1
+                  gsub(/[0-9]+$/, num, $3)
+                  print $1"."$2"."$3
+                } else {
+                  print $1"."$2"."$3+1"-beta.1"
+                }
+              }')
+            else
+              NEW_VERSION=$(echo $CURRENT_VERSION | awk -F. '{print $1"."$2"."$3+1"-beta.1"}')
+            fi
+            ;;
+        esac
+
+        echo "New version: $NEW_VERSION"
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "changed=true" >> $GITHUB_OUTPUT
+
+        # Update package.json
+        node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.version = '$NEW_VERSION';
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\\n');
+        "
+
+        echo "Updated package.json with new version: $NEW_VERSION"

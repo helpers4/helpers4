@@ -106,3 +106,13 @@ The context files are designed to integrate with:
 - **Automation**: Inform CI/CD pipeline development and maintenance
 
 This context directory serves as the single source of truth for understanding how to work effectively with GitHub Copilot on the Helpers4 project, ensuring consistent, secure, and high-quality development practices.
+
+## 📂 Quick Reference
+
+- **[project-context.md](project-context.md)** - Project structure and modules overview
+- **[development-practices.md](development-practices.md)** - Coding standards and guidelines
+- **[github-actions-context.md](github-actions-context.md)** - CI/CD workflows and automation
+- **[prompts.md](prompts.md)** - Effective communication patterns with Copilot
+- **[implementation-summary.md](implementation-summary.md)** - Technical implementation details
+- **[workflow-refactoring-summary.md](workflow-refactoring-summary.md)** - GitHub Actions workflows refactoring documentation
+- **[composite-actions-summary.md](composite-actions-summary.md)** - Composite actions for code reusability and maintainability
