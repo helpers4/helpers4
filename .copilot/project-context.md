@@ -11,6 +11,7 @@ Helpers4 is a comprehensive TypeScript utility library designed for modern web d
 - **Modular architecture**: Organized into focused packages by category
 - **Production-ready**: Thoroughly tested with comprehensive test suites
 - **Modern tooling**: Uses Bun as package manager and build tool
+- **Automated workflows**: Complete CI/CD with version management, building, testing, and publishing
 
 ## Architecture
 
@@ -27,33 +28,115 @@ The project follows a monorepo-like structure where each category becomes an ind
 @helpers4/observable - Observable utilities
 @helpers4/date      - Date manipulation utilities
 @helpers4/number    - Number utilities
+@helpers4/math      - Mathematical utilities
+@helpers4/type      - Type utilities and guards
+@helpers4/version   - Version management utilities
 @helpers4/all       - Complete bundle with all helpers
+```
+
+### Scripts Architecture
+The project uses a well-organized scripts directory structure:
+
+```
+scripts/
+├── build/          # Build system and package generation
+├── coherency/      # Validation and integrity tests
+├── constants/      # Shared constants across scripts
+├── license/        # License management tools
+├── publish/        # NPM publishing with transaction safety
+├── tests/          # Test utilities and configuration
+└── version/        # Version management and release automation
 ```
 
 ### Build System
 - **Entry point**: Each category has its own `index.ts` that exports all functions
 - **Configuration**: `config.json` in each category defines package metadata
-- **Build process**: `.ci/build/` contains the build system that generates individual packages
-- **Publishing**: `.ci/publish/` handles npm publishing with transaction safety
+- **Build process**: `scripts/build/` contains the build system that generates individual packages
+- **Publishing**: `scripts/publish/` handles npm publishing with transaction safety
+- **Documentation**: Each script directory has comprehensive README.md files
 
 ### Code Organization
+
+#### Source Code Structure
 ```
 helpers/
 ├── array/           # Array helper functions
-├── function/        # Function utilities
-├── object/          # Object manipulation
-├── promise/         # Promise utilities
-├── string/          # String processing
-├── url/             # URL utilities
-├── observable/      # Observable helpers
-├── date/            # Date utilities
-└── number/          # Number utilities
+├── date/            # Date manipulation utilities
+├── function/        # Function utilities (debounce, throttle, memoize)
+├── math/            # Mathematical utilities
+├── number/          # Number utilities
+├── object/          # Object manipulation helpers
+├── observable/      # Observable utilities
+├── promise/         # Promise and async utilities
+├── string/          # String processing functions
+├── type/            # Type utilities and guards
+├── url/             # URL manipulation helpers
+└── version/         # Version management utilities
 
 Each category contains:
 ├── *.ts             # Helper function implementations
-├── *.test.ts        # Test files
+├── *.test.ts        # Comprehensive test files
 ├── index.ts         # Category exports
-└── config.json      # Package configuration
+└── config.json      # Package configuration and metadata
+```
+
+#### Scripts Organization
+```
+scripts/
+├── README.md                    # Main scripts documentation
+├── build/
+│   ├── README.md               # Build system documentation
+│   ├── index.ts                # Main build orchestrator
+│   ├── build-categories.ts     # Category package builder
+│   ├── build-bundle.ts         # Bundle package builder
+│   └── helpers/                # Build utilities and helpers
+├── coherency/
+│   ├── README.md               # Coherency testing documentation
+│   ├── index.ts                # Main test runner
+│   ├── test-bundle.ts          # Bundle integrity tests
+│   ├── test-category-packages.ts # Category validation
+│   ├── test-dependencies-coherency.ts # Dependency validation
+│   └── test-version-consistency.ts # Version consistency checks
+├── constants/
+│   ├── README.md               # Constants documentation
+│   ├── index.ts                # Central constants export
+│   ├── build.constant.ts       # Build-related constants
+│   ├── dir.constant.ts         # Directory path constants
+│   └── files.constant.ts       # File name constants
+├── license/
+│   ├── README.md               # License management documentation
+│   └── add-license-headers.ts  # License header automation
+├── publish/
+│   ├── README.md               # Publishing documentation
+│   ├── index.ts                # Main publishing script
+│   └── helpers/                # Publishing utilities
+├── tests/
+│   ├── README.md               # Test utilities documentation
+│   └── preload.ts              # Test preload configuration
+└── version/
+    ├── README.md               # Version management documentation
+    ├── index.ts                # Version management entry point
+    ├── version-manager.ts      # Version bump automation
+    ├── release.ts              # Complete release process
+    ├── commit-analyzer.ts      # Conventional commit analysis
+    ├── git-utils.ts            # Git operation utilities
+    └── pre-release-validator.ts # Pre-release validation
+```
+
+#### Build Output Structure
+```
+build/
+├── array/          # Category package output
+│   ├── lib/        # Compiled JavaScript/TypeScript
+│   ├── package.json
+│   ├── README.md
+│   └── LICENSE.md
+├── [other-categories]/
+└── all/            # Bundle package
+    ├── meta/       # Bundle metadata
+    ├── package.json
+    ├── README.md
+    └── LICENSE.md
 ```
 
 ## Related Projects
@@ -66,9 +149,9 @@ Each category contains:
 - **Deployment**: GitHub Pages with custom domain support
 
 ### Build and CI System
-- **Version Management**: `.ci/version/` contains version bumping and release logic
-- **Build System**: `.ci/build/` generates TypeScript definitions and package files
-- **Publishing**: `.ci/publish/` handles npm publishing with retry logic
+- **Version Management**: `scripts/version/` contains version bumping and release logic
+- **Build System**: `scripts/build/` generates TypeScript definitions and package files
+- **Publishing**: `scripts/publish/` handles npm publishing with retry logic
 - **Testing**: Comprehensive test suite with coherency checks
 
 ## Key Concepts
@@ -103,25 +186,93 @@ All functions include comprehensive TypeScript types:
 ## Development Workflow
 
 ### Adding New Helpers
-1. Create function in appropriate category directory
-2. Add comprehensive tests
-3. Update category `index.ts`
-4. Update `config.json` if needed
-5. Run build and test scripts
-6. Update documentation
+1. **Create function** in appropriate category directory (`helpers/[category]/`)
+2. **Add comprehensive tests** with `.test.ts` extension
+3. **Update category index.ts** to export the new function
+4. **Update config.json** if needed (description, keywords, exports)
+5. **Run build and validation**:
+   ```bash
+   npm run build
+   npm run coherency
+   ```
+6. **Update documentation** and add JSDoc comments
 
 ### Release Process
-1. Use version management scripts: `bun .ci/version/version-manager.ts [patch|minor|major]`
-2. Build packages: `bun run build`
-3. Run tests: `bun run test`
-4. Publish: `bun .ci/publish/`
-5. Documentation automatically updates via GitHub Actions
+1. **Version management**:
+   ```bash
+   # Automatic version detection from commits
+   npm run version:auto
+   
+   # Manual version types
+   npm run version:patch     # Bug fixes
+   npm run version:minor     # New features
+   npm run version:major     # Breaking changes
+   npm run version:prerelease # Alpha/beta versions
+   ```
 
-### Testing
+2. **Complete release**:
+   ```bash
+   # Full automated release process
+   npm run release:patch
+   npm run release:minor
+   npm run release:major
+   
+   # Auto-detect and release
+   npm run release:auto
+   
+   # Dry run for testing
+   npm run release:dry-run
+   ```
+
+3. **Manual publishing** (if needed):
+   ```bash
+   npm run build
+   npm run coherency
+   npm run publish
+   
+   # Or dry run first
+   npm run publish:dry-run
+   ```
+
+### Testing and Validation
 ```bash
-bun test                    # Run all tests
-bun test helpers/array/     # Test specific category
-bun run coherency          # Validate build output
+# Run all tests
+npm test
+bun test
+
+# Test specific category
+bun test helpers/array/
+
+# Run coherency tests
+npm run coherency
+
+# Validate before release
+bun scripts/version/pre-release-validator.ts
+```
+
+### Scripts and Automation
+```bash
+# Build system
+npm run build                    # Build all packages
+bun scripts/build/               # Direct build script access
+
+# Version management
+npm run version:auto             # Auto-detect version from commits
+npm run version:auto-dry         # Preview version changes
+bun scripts/version/version-manager.ts --help
+
+# Publishing
+npm run publish                  # Publish all packages
+npm run publish:dry-run          # Test publishing
+bun scripts/publish/ --help      # See all publishing options
+
+# Coherency and validation
+npm run coherency                # Run all coherency tests
+bun scripts/coherency/test-bundle.ts      # Test bundle only
+bun scripts/coherency/test-version-consistency.ts
+
+# License management
+bun scripts/license/add-license-headers.ts
 ```
 
 ## Configuration Files
@@ -139,8 +290,8 @@ bun run coherency          # Validate build output
 ### Build Configuration
 - `tsconfig.json`: TypeScript compilation settings
 - `bunfig.toml`: Bun package manager configuration
-- `.ci/build/`: Build system implementation
-- `.ci/publish/`: Publishing configuration
+- `scripts/build/`: Build system implementation
+- `scripts/publish/`: Publishing configuration
 
 ## External Dependencies
 
@@ -174,25 +325,103 @@ bun run coherency          # Validate build output
 
 ## Best Practices
 
-### Code Style
-- Use TypeScript strict mode
-- Comprehensive JSDoc comments
-- Consistent naming conventions
-- Prefer pure functions where possible
-- Handle edge cases explicitly
+### Code Style and Conventions
+- **TypeScript strict mode**: All code uses strict TypeScript configuration
+- **Pure functions**: Prefer pure functions without side effects when possible
+- **Comprehensive JSDoc**: All public functions have detailed JSDoc comments
+- **Consistent naming**: Use camelCase for functions, PascalCase for types
+- **Error handling**: Handle edge cases explicitly with clear error messages
+- **Type safety**: Leverage TypeScript's type system fully
 
-### Performance
-- Optimize for tree-shaking
-- Minimize runtime dependencies
-- Use efficient algorithms
-- Consider memory usage
-- Benchmark performance-critical functions
+### Testing Standards
+- **Comprehensive coverage**: Each function has multiple test cases
+- **Edge case testing**: Test boundary conditions and error scenarios
+- **Performance testing**: Benchmark performance-critical functions
+- **Integration testing**: Validate cross-function compatibility
+- **Coherency validation**: Ensure build output matches source expectations
 
-### Maintenance
-- Keep dependencies updated
-- Monitor security vulnerabilities
-- Regular performance audits
-- Community feedback integration
-- Documentation maintenance
+### Documentation Requirements
+- **JSDoc comments**: All public APIs documented with examples
+- **README files**: Each directory has comprehensive documentation
+- **Usage examples**: Real-world usage examples in documentation
+- **Type documentation**: Clear explanation of generic types and constraints
+- **Migration guides**: Document breaking changes and upgrade paths
 
-This context helps GitHub Copilot understand the project structure and provide relevant suggestions for development tasks.
+### Performance Guidelines
+- **Tree-shaking optimization**: Design for efficient tree-shaking
+- **Minimal dependencies**: Keep runtime dependencies to absolute minimum
+- **Algorithm efficiency**: Use optimal algorithms for common operations
+- **Memory management**: Consider memory usage patterns
+- **Bundle size**: Monitor and optimize final bundle sizes
+
+### Release and Versioning
+- **Conventional commits**: Use conventional commit messages for auto-versioning
+- **Semantic versioning**: Follow SemVer strictly for all releases
+- **Breaking changes**: Document breaking changes thoroughly
+- **Backward compatibility**: Maintain compatibility when possible
+- **Deprecation process**: Gradual deprecation with clear migration paths
+
+### Security Practices
+- **Dependency updates**: Regular security updates for all dependencies
+- **Vulnerability scanning**: Automated security scanning in CI/CD
+- **Input validation**: Validate all inputs and handle malicious data
+- **Safe defaults**: Use secure defaults for all configurations
+- **License compliance**: Ensure all code has proper license headers
+
+## Tools and Integrations
+
+### Development Tools
+- **Bun**: Primary package manager and test runner for fast development
+- **TypeScript**: Strict TypeScript for type safety and developer experience
+- **Vitest**: Testing framework integrated with Bun for fast test execution
+- **ESLint**: Code linting and style enforcement
+- **Prettier**: Code formatting (configured via .editorconfig)
+
+### Build and Automation
+- **Custom Build System**: TypeScript-based build scripts in `scripts/build/`
+- **Version Management**: Automated versioning with conventional commits
+- **License Headers**: Automated license header management
+- **Coherency Testing**: Custom validation scripts for package integrity
+- **Transaction Publishing**: Safe NPM publishing with rollback capabilities
+
+### CI/CD Integration
+- **GitHub Actions**: Automated testing, building, and publishing workflows
+- **Release Automation**: Triggered via GitHub Actions with manual dispatch
+- **NPM Registry**: Automated publishing to `@helpers4` scoped packages
+- **Documentation Updates**: Automatic documentation website updates on release
+
+### File Structure Conventions
+```
+# Configuration Files
+├── package.json          # Root package configuration
+├── tsconfig.json         # TypeScript configuration
+├── bunfig.toml          # Bun configuration with test preload
+├── .editorconfig        # Editor configuration
+├── .eslintrc.json       # ESLint configuration
+└── .gitignore           # Git ignore patterns
+
+# Source Organization
+├── helpers/             # Source code organized by category
+├── scripts/             # Build, test, and automation scripts
+├── build/               # Generated package output (git-ignored)
+└── .template/           # Template files for package generation
+
+# Documentation
+├── README.md            # Main project documentation
+├── LICENSE.md           # Project license
+└── scripts/*/README.md  # Script-specific documentation
+```
+
+### Package Naming and Scope
+- **Scope**: All packages published under `@helpers4/` scope
+- **Category packages**: Named by category (e.g., `@helpers4/array`)
+- **Bundle package**: Complete bundle as `@helpers4/all`
+- **Version consistency**: All packages maintain the same version number
+
+### Testing Configuration
+- **Test files**: Co-located with source using `.test.ts` extension
+- **Test preload**: `scripts/tests/preload.ts` for common test setup
+- **Coverage**: Comprehensive test coverage requirements
+- **Performance tests**: Benchmarking for critical functions
+
+This context helps GitHub Copilot understand the project structure, conventions, and provide relevant suggestions for development tasks specific to the Helpers4 library.

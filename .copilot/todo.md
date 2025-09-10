@@ -7,7 +7,7 @@ This file contains tasks and prompts for GitHub Copilot to help continue develop
 ### 1. 🔄 Complete Build System Enhancement
 **Prompt for Copilot:**
 ```
-Help me enhance the build system in .ci/build/ to better handle TypeScript compilation and package generation. The system should:
+Help me enhance the build system in scripts/build/ to better handle TypeScript compilation and package generation. The system should:
 - Generate proper .d.ts files for each helper function
 - Create individual package.json files for each category
 - Ensure tree-shaking compatibility
@@ -243,7 +243,7 @@ I'm working on function utilities in helpers/function/. Focus on:
 
 ### For Build System:
 ```
-I'm working on the build system in .ci/build/. This system:
+I'm working on the build system in scripts/build/. This system:
 - Generates individual npm packages from a monorepo structure
 - Creates TypeScript definitions
 - Ensures tree-shaking compatibility

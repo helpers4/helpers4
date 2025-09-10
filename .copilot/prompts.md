@@ -31,7 +31,7 @@ The function should be: [DESCRIBE FUNCTION]
 
 ### Build System Tasks
 ```
-Help me work with the build system in .ci/build/. I need to:
+Help me work with the build system in scripts/build/. I need to:
 - Understand how packages are generated from the monorepo structure
 - Modify the TypeScript compilation process
 - Ensure proper .d.ts file generation
