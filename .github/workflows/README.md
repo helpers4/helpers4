@@ -91,7 +91,7 @@ Current: 2.0.0
 
 ### Troubleshooting
 - Check workflow logs for detailed error messages
-- Review the release documentation in `.ci/RELEASE.md`
+- Review the release documentation in `scripts/version/README.md`
 - Run processes locally first to debug issues
 
 ## Security

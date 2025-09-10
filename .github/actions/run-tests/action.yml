@@ -1,0 +1,100 @@
+name: "Run Tests"
+description: "Run tests, build, and validation checks"
+
+inputs:
+  test-type:
+    description: "Type of test to run (test, build, lint, typecheck, coherency)"
+    required: true
+
+  node-version:
+    description: "Node.js version for context"
+    required: false
+    default: "20"
+
+outputs:
+  status:
+    description: "Test execution status"
+    value: ${{ steps.test.outputs.status }}
+
+  details:
+    description: "Test execution details"
+    value: ${{ steps.test.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run ${{ inputs.test-type }}
+      id: test
+      shell: bash
+      run: |
+        echo "Running ${{ inputs.test-type }} on Node.js ${{ inputs.node-version }}..."
+
+        case "${{ inputs.test-type }}" in
+          "test")
+            if bun run test; then
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "details=All tests passed on Node.js ${{ inputs.node-version }}" >> $GITHUB_OUTPUT
+            else
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "details=Tests failed on Node.js ${{ inputs.node-version }}" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            ;;
+            
+          "build")
+            if bun run build; then
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "details=Build completed successfully" >> $GITHUB_OUTPUT
+            else
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "details=Build failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            ;;
+            
+          "lint")
+            # Check if ESLint is configured
+            if [ -f ".eslintrc.js" ] || [ -f ".eslintrc.json" ] || [ -f "eslint.config.js" ]; then
+              if npx eslint . --ext .ts,.js; then
+                echo "status=success" >> $GITHUB_OUTPUT
+                echo "details=No linting errors found" >> $GITHUB_OUTPUT
+              else
+                echo "status=failure" >> $GITHUB_OUTPUT
+                echo "details=Linting errors detected" >> $GITHUB_OUTPUT
+                exit 1
+              fi
+            else
+              echo "status=skipped" >> $GITHUB_OUTPUT
+              echo "details=ESLint not configured" >> $GITHUB_OUTPUT
+            fi
+            ;;
+            
+          "typecheck")
+            if npx tsc --noEmit; then
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "details=TypeScript compilation successful" >> $GITHUB_OUTPUT
+            else
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "details=TypeScript errors detected" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            ;;
+            
+          "coherency")
+            if bun run coherency; then
+              echo "status=success" >> $GITHUB_OUTPUT
+              echo "details=Coherency checks passed" >> $GITHUB_OUTPUT
+            else
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "details=Coherency issues detected" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            ;;
+            
+          *)
+            echo "Unknown test type: ${{ inputs.test-type }}"
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "details=Unknown test type" >> $GITHUB_OUTPUT
+            exit 1
+            ;;
+        esac

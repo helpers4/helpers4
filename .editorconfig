@@ -19,7 +19,7 @@ max_line_length = off
 insert_final_newline = off
 
 # Ignore limits
-[.cd/*]
+[scripts/*]
 max_line_length = off
 
 # Ignore all

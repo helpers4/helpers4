@@ -1,0 +1,53 @@
+name: "Setup Environment"
+description: "Setup Bun, Node.js, cache dependencies and install packages"
+
+inputs:
+  node-version:
+    description: "Node.js version to setup"
+    required: false
+    default: "20"
+
+  bun-version:
+    description: "Bun version to setup"
+    required: false
+    default: "latest"
+
+  skip-install:
+    description: "Skip package installation"
+    required: false
+    default: "false"
+
+outputs:
+  cache-hit:
+    description: "Whether cache was hit"
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
+
+    - name: Setup Node.js
+      if: inputs.node-version != ''
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Cache dependencies
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.bun/install/cache
+          node_modules
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      if: inputs.skip-install != 'true'
+      shell: bash
+      run: bun install --frozen-lockfile

@@ -1,0 +1,60 @@
+name: "Build Project"
+description: "Build the project and upload build artifacts"
+
+inputs:
+  artifact-name:
+    description: "Name of the build artifact to upload"
+    required: true
+
+outputs:
+  status:
+    description: "Build status"
+    value: ${{ steps.build.outputs.status }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download package.json artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: package-json-${{ github.run_id }}
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.bun/install/cache
+          node_modules
+        key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+        restore-keys: |
+          ${{ runner.os }}-bun-
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install --frozen-lockfile
+
+    - name: Run tests
+      shell: bash
+      run: |
+        echo "Running tests..."
+        bun test
+
+    - name: Build project
+      id: build
+      shell: bash
+      run: |
+        echo "Building project..."
+        bun run build
+        echo "status=success" >> $GITHUB_OUTPUT
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: build/
+        retention-days: 1
