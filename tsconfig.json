@@ -5,7 +5,7 @@
     "incremental": true,
     "target": "esnext",
     "outDir": "build",
-    "rootDir": "src",
+    "rootDir": ".",
     "moduleResolution": "node",
     "module": "esnext",
     "declaration": true,
@@ -34,19 +34,26 @@
     // "experimentalDecorators": true /* Enables experimental support for ES7 decorators. */,
     // "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */,
     "lib": [
-      "es2017"
+      "es2017",
+      "DOM",
+      "DOM.Iterable"
     ],
     "types": [],
+    "skipLibCheck": true,
     "typeRoots": [
       "node_modules/@types",
       "helpers/*/src/types"
     ]
   },
   "include": [
-    "helpers/**/src/**/*.ts"
-, "helpers/url/url.ts", "helpers/url/url.test.ts"  ],
+    "helpers/**/*.ts"
+  ],
   "exclude": [
-    "node_modules/**"
+    "node_modules/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.bench.ts",
+    "**/node_modules/**"
   ],
   "compileOnSave": false
 }

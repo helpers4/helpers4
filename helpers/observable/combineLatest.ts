@@ -61,5 +61,3 @@ export function combineLatest(input: any): any {
       : of({});
   }
 }
-
-type ObservableInput<T> = Observable<T> | undefined | null;
