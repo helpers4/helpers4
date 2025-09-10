@@ -386,9 +386,15 @@ bun scripts/license/add-license-headers.ts
 
 ### CI/CD Integration
 - **GitHub Actions**: Automated testing, building, and publishing workflows
+  - `release.yml`: Manual release workflow with version management
+  - `pr-validation.yml`: Comprehensive PR validation including security scanning
+- **Multi-node testing**: Matrix strategy testing on Node.js 18, 20, and 22
+- **Security scanning**: Automated dependency auditing and sensitive data detection
+- **Conventional commits**: Automatic validation of commit message format
 - **Release Automation**: Triggered via GitHub Actions with manual dispatch
 - **NPM Registry**: Automated publishing to `@helpers4` scoped packages
 - **Documentation Updates**: Automatic documentation website updates on release
+- **PR Status Updates**: Automated commenting on PRs with validation results
 
 ### File Structure Conventions
 ```

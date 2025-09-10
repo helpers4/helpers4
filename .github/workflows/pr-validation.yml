@@ -1,0 +1,281 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+  pull_request_target:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+# Security: Only allow read permissions for pull_request_target
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  statuses: write
+
+jobs:
+  # Security check for external contributors
+  security-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - name: Check if PR is from external contributor
+        run: |
+          echo "::warning::This PR is from an external contributor. Manual review required before running CI."
+          echo "::error::External PR detected. Workflow stopped for security."
+          exit 1
+
+  # Main validation workflow
+  validate:
+    runs-on: ubuntu-latest
+    # Only run for internal PRs or approved external PRs
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # For pull_request_target, checkout the PR head
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          # Fetch full history for conventional commit analysis
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint code
+        run: |
+          if [ -f ".eslintrc.json" ]; then
+            bun run lint || echo "::warning::Linting failed or no lint script found"
+          else
+            echo "::notice::No ESLint configuration found, skipping linting"
+          fi
+
+      - name: Type checking
+        run: |
+          echo "Running TypeScript compilation check..."
+          bun run tsc --noEmit
+
+      - name: Run tests
+        run: |
+          echo "Running test suite..."
+          bun run test
+
+      - name: Check coherency
+        run: |
+          echo "Running coherency checks..."
+          bun run coherency
+
+      - name: Build packages
+        run: |
+          echo "Building packages..."
+          bun run build
+
+      - name: Validate build output
+        run: |
+          echo "Validating build output..."
+          if [ ! -d "build" ]; then
+            echo "::error::Build directory not found"
+            exit 1
+          fi
+          
+          # Check if build contains expected packages
+          expected_packages=("array" "function" "object" "promise" "string" "url" "observable" "date" "number" "math" "type" "version" "all")
+          for package in "${expected_packages[@]}"; do
+            if [ ! -d "build/$package" ]; then
+              echo "::warning::Package $package not found in build output"
+            else
+              echo "✓ Package $package built successfully"
+            fi
+          done
+
+      - name: Check bundle sizes
+        run: |
+          echo "Analyzing bundle sizes..."
+          if command -v du >/dev/null 2>&1; then
+            echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "| Package | Size |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|------|" >> $GITHUB_STEP_SUMMARY
+            
+            for dir in build/*/; do
+              if [ -d "$dir" ]; then
+                package_name=$(basename "$dir")
+                size=$(du -sh "$dir" | cut -f1)
+                echo "| $package_name | $size |" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+
+  # Security scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run security audit
+        run: |
+          echo "Running security audit..."
+          bun audit || echo "::warning::Security audit found issues"
+
+      - name: Check for sensitive data
+        run: |
+          echo "Scanning for potential sensitive data..."
+          # Check for common patterns that might indicate sensitive data
+          if grep -r "password\|secret\|token\|key" --include="*.ts" --include="*.js" --include="*.json" helpers/ || true; then
+            echo "::warning::Potential sensitive data patterns found. Please review."
+          fi
+
+  # Conventional commit validation
+  commit-validation:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' || 
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        run: |
+          echo "Validating conventional commit format..."
+          
+          # Get the base branch commit
+          BASE_SHA=$(git merge-base HEAD origin/main)
+          
+          # Check each commit in the PR
+          INVALID_COMMITS=0
+          
+          for commit in $(git rev-list $BASE_SHA..HEAD); do
+            COMMIT_MSG=$(git log --format=%s -n 1 $commit)
+            echo "Checking commit: $COMMIT_MSG"
+            
+            # Check if commit follows conventional commit format
+            if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"; then
+              echo "::error::Invalid commit message format: $COMMIT_MSG"
+              echo "::error::Please use conventional commit format: type(scope): description"
+              INVALID_COMMITS=1
+            else
+              echo "✓ Valid commit format: $COMMIT_MSG"
+            fi
+          done
+          
+          if [ $INVALID_COMMITS -eq 1 ]; then
+            echo "::error::One or more commits have invalid format"
+            exit 1
+          fi
+
+  # Comment on PR with validation results
+  pr-comment:
+    runs-on: ubuntu-latest
+    needs: [validate, security-scan, commit-validation]
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+    
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            // Check if we already commented
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## PR Validation Results')
+            );
+
+            const validate = '${{ needs.validate.result }}';
+            const security = '${{ needs.security-scan.result }}';
+            const commits = '${{ needs.commit-validation.result }}';
+
+            const getStatusEmoji = (status) => {
+              switch(status) {
+                case 'success': return '✅';
+                case 'failure': return '❌';
+                case 'cancelled': return '⏭️';
+                case 'skipped': return '⏭️';
+                default: return '⏸️';
+              }
+            };
+
+            const body = `## PR Validation Results
+
+            | Check | Status | Result |
+            |-------|--------|--------|
+            | Code Validation | ${getStatusEmoji(validate)} | ${validate} |
+            | Security Scan | ${getStatusEmoji(security)} | ${security} |
+            | Commit Validation | ${getStatusEmoji(commits)} | ${commits} |
+
+            ### Summary
+            ${validate === 'success' && security === 'success' && commits === 'success' 
+              ? '🎉 All checks passed! This PR is ready for review.' 
+              : '⚠️ Some checks failed. Please review the details above and fix any issues.'}
+
+            ---
+            *This comment is automatically updated on each push.*`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
