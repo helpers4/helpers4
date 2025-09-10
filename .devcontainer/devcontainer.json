@@ -37,11 +37,13 @@
         // Editor Enhancements
         "cardinal90.multi-cursor-case-preserve",
         "moshfeu.compare-folders",
+        "xyz.local-history",
         // File Format Support
         "redhat.vscode-yaml",
         "mechatroner.rainbow-csv",
         // License Header Management
-        "psioniq.psi-header"
+        "psioniq.psi-header",
+        "MS-CEINTL.vscode-language-pack-fr"
       ],
       "settings": {
         "typescript.preferences.useAliasesForRenames": false,
