@@ -1,0 +1,38 @@
+name: "Run Coherency Tests"
+description: "Run coherency validation tests with Bun"
+
+outputs:
+  status:
+    description: "Coherency test execution status"
+    value: ${{ steps.coherency.outputs.status }}
+
+  details:
+    description: "Coherency test execution details"
+    value: ${{ steps.coherency.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run coherency tests
+      id: coherency
+      shell: bash
+      run: |
+        echo "Running coherency tests with Bun..."
+
+        if bun run coherency; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=Coherency checks passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=Coherency issues detected" >> $GITHUB_OUTPUT
+          exit 1
+        fi

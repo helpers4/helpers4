@@ -1,0 +1,38 @@
+name: "Run Build"
+description: "Build the project with Bun"
+
+outputs:
+  status:
+    description: "Build execution status"
+    value: ${{ steps.build.outputs.status }}
+
+  details:
+    description: "Build execution details"
+    value: ${{ steps.build.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run build
+      id: build
+      shell: bash
+      run: |
+        echo "Building project with Bun..."
+
+        if bun run build; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=Build completed successfully" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=Build failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi

@@ -1,0 +1,34 @@
+name: "Run TypeCheck"
+description: "Run TypeScript type checking with Bun (assumes dependencies already installed)"
+
+outputs:
+  status:
+    description: "TypeCheck execution status"
+    value: ${{ steps.typecheck.outputs.status }}
+
+  details:
+    description: "TypeCheck execution details"
+    value: ${{ steps.typecheck.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Run type checking
+      id: typecheck
+      shell: bash
+      run: |
+        echo "Running TypeScript type checking with Bun..."
+
+        if bun run typecheck; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=TypeScript compilation successful" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=TypeScript errors detected" >> $GITHUB_OUTPUT
+          exit 1
+        fi
