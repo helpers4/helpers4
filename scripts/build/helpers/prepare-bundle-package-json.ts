@@ -22,8 +22,8 @@ export async function prepareBundlePackageJson(
 
   const version = rootPackage.version;
 
-  // Create dependencies object with all categories
-  const dependencies = categories.reduce<Record<string, string>>((acc, category) => {
+  // Create peer dependencies object with all categories
+  const peerDependencies = categories.reduce<Record<string, string>>((acc, category) => {
     acc[`@helpers4/${category}`] = version;
     return acc;
   }, {});
@@ -32,7 +32,7 @@ export async function prepareBundlePackageJson(
   const packageJson = {
     ...templatePackage,
     version,
-    dependencies
+    peerDependencies,
   };
 
   // Use Bun's native JSON writing
