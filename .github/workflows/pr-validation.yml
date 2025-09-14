@@ -99,9 +99,7 @@ jobs:
 
       - name: Run tests
         id: test
-        uses: ./.github/actions/run-tests
-        with:
-          test-type: test
+        uses: ./.github/actions/run-unit-tests
 
   # Simple validation jobs
   security:
@@ -159,10 +157,7 @@ jobs:
 
       - name: Run linting
         id: lint
-        run: |
-          echo "Running linting..."
-          bun run lint
-          echo "status=success" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/run-lint
 
   type-check:
     runs-on: ubuntu-latest
@@ -189,10 +184,7 @@ jobs:
 
       - name: Run TypeScript check
         id: typecheck
-        run: |
-          echo "Running TypeScript check..."
-          bun run typecheck
-          echo "status=success" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/run-typecheck
 
   # Verification job (depends on build for artifacts)
   verification:
@@ -232,10 +224,7 @@ jobs:
 
       - name: Run coherency tests
         id: coherency
-        run: |
-          echo "Running coherency tests..."
-          bun run test:coherency
-          echo "status=success" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/run-coherency
 
       - name: Analyze bundle size
         id: bundle

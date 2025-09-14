@@ -1,0 +1,38 @@
+name: "Run Unit Tests"
+description: "Run unit tests with Bun"
+
+outputs:
+  status:
+    description: "Test execution status"
+    value: ${{ steps.test.outputs.status }}
+
+  details:
+    description: "Test execution details"
+    value: ${{ steps.test.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run unit tests
+      id: test
+      shell: bash
+      run: |
+        echo "Running unit tests with Bun..."
+
+        if bun run test; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=All unit tests passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=Unit tests failed" >> $GITHUB_OUTPUT
+          exit 1
+        fi

@@ -1,0 +1,34 @@
+name: "Run Lint"
+description: "Run linting checks with Bun (assumes dependencies already installed)"
+
+outputs:
+  status:
+    description: "Lint execution status"
+    value: ${{ steps.lint.outputs.status }}
+
+  details:
+    description: "Lint execution details"
+    value: ${{ steps.lint.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Run linting
+      id: lint
+      shell: bash
+      run: |
+        echo "Running linting with Bun..."
+
+        if bun run lint; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=No linting errors found" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=Linting errors detected" >> $GITHUB_OUTPUT
+          exit 1
+        fi
