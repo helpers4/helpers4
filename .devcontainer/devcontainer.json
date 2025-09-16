@@ -4,7 +4,8 @@
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/prulloac/devcontainer-features/bun:1": {},
-    "ghcr.io/baxyz/devcontainer-features/shell-history-per-project:0.0.5": {}
+    "ghcr.io/baxyz/devcontainer-features/shell-history-per-project:0.0.5": {},
+    "ghcr.io/baxyz/devcontainer-features/git-absorb:0": {}
   },
   "customizations": {
     "vscode": {
