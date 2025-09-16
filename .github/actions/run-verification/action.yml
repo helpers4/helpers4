@@ -1,5 +1,5 @@
 name: "Run Verification Tests"
-description: "Run coherency tests and bundle size analysis with Bun"
+description: "Run coherency tests including bundle size analysis with Bun"
 
 inputs:
   build-artifact:
@@ -7,21 +7,13 @@ inputs:
     required: true
 
 outputs:
-  coherency-status:
-    description: "Coherency test execution status"
+  status:
+    description: "Verification test execution status"
     value: ${{ steps.coherency.outputs.status }}
 
-  coherency-details:
-    description: "Coherency test execution details"
+  details:
+    description: "Verification test execution details"
     value: ${{ steps.coherency.outputs.details }}
-
-  bundle-size-status:
-    description: "Bundle size analysis status"
-    value: ${{ steps.bundle.outputs.status }}
-
-  bundle-size-details:
-    description: "Bundle size analysis details"
-    value: ${{ steps.bundle.outputs.details }}
 
 runs:
   using: "composite"
@@ -55,26 +47,4 @@ runs:
           echo "status=failure" >> $GITHUB_OUTPUT
           echo "details=Coherency issues detected" >> $GITHUB_OUTPUT
           exit 1
-        fi
-
-    - name: Analyze bundle size
-      id: bundle
-      shell: bash
-      run: |
-        echo "Analyzing bundle size..."
-
-        if [ -d "build" ] || [ -d "dist" ]; then
-          TOTAL_SIZE=$(du -sh build/ dist/ 2>/dev/null | awk '{print $1}' | head -1)
-          if [ -n "$TOTAL_SIZE" ]; then
-            echo "Bundle size: ${TOTAL_SIZE}"
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "details=Bundle size: ${TOTAL_SIZE}" >> $GITHUB_OUTPUT
-          else
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "details=Bundle size: N/A" >> $GITHUB_OUTPUT
-          fi
-        else
-          echo "No build output found for size analysis"
-          echo "status=skipped" >> $GITHUB_OUTPUT
-          echo "details=No build output found for analysis" >> $GITHUB_OUTPUT
         fi

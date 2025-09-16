@@ -15,6 +15,7 @@ import { testBundle } from "./test-bundle";
 import { testVersionConsistency } from "./test-version-consistency";
 import { testCategoryPackages } from "./test-category-packages";
 import { testDependenciesCoherency } from "./test-dependencies-coherency";
+import { testBundleSizes } from "./test-bundle-sizes";
 
 interface CoherencyTest {
   name: string;
@@ -42,6 +43,11 @@ const coherencyTests: CoherencyTest[] = [
     name: "Dependencies Coherency",
     description: "Checks dependencies consistency across packages",
     testFunction: testDependenciesCoherency
+  },
+  {
+    name: "Bundle Sizes",
+    description: "Analyzes and reports package sizes",
+    testFunction: testBundleSizes
   }
 ];
 
