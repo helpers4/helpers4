@@ -6,9 +6,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-
 /**
- * Test script to verify the bundle package works correctly
+ * Bundle Package coherency test
  */
 
 import { join } from "node:path";
@@ -53,9 +52,26 @@ async function testBundle() {
   return true;
 }
 
-// Run the test if this script is called directly
-if (import.meta.url.endsWith(process.argv[1])) {
-  testBundle().catch(console.error);
+async function runBundleTest() {
+  try {
+    console.log("🧪 Bundle Package:");
+    console.log("   Tests the main bundle package integrity");
+    
+    const result = await testBundle();
+    
+    if (result === false) {
+      throw new Error("Test Bundle Package returned false");
+    }
+    
+    console.log("✅ Bundle Package passed");
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Bundle Package failed:", error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
 }
 
-export { testBundle };
+// Run the test if this script is called directly
+if (import.meta.url.includes(process.argv[1]) || import.meta.url.includes('bundle')) {
+  runBundleTest().catch(console.error);
+}
