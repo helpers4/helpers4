@@ -195,8 +195,7 @@ jobs:
       (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository)
     
     outputs:
-      coherency-status: ${{ steps.verification.outputs.coherency-status }}
-      bundle-size-status: ${{ steps.verification.outputs.bundle-size-status }}
+      verification-status: ${{ steps.verification.outputs.status }}
       
     steps:
       - name: Checkout code
@@ -243,8 +242,7 @@ jobs:
               'Security Audit': '${{ needs.security.outputs.security-status || 'unknown' }}',
               'Lint': '${{ needs.lint.outputs.lint-status || 'unknown' }}',
               'Type Check': '${{ needs.type-check.outputs.typecheck-status || 'unknown' }}',
-              'Coherency Tests': '${{ needs.verification.outputs.coherency-status || 'unknown' }}',
-              'Bundle Size': '${{ needs.verification.outputs.bundle-size-status || 'unknown' }}'
+              'Coherency Tests': '${{ needs.verification.outputs.verification-status || 'unknown' }}',
             };
             
             const comment = createSummaryTable(jobs);
