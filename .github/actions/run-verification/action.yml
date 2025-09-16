@@ -1,0 +1,80 @@
+name: "Run Verification Tests"
+description: "Run coherency tests and bundle size analysis with Bun"
+
+inputs:
+  build-artifact:
+    description: "Name of the build artifact to download"
+    required: true
+
+outputs:
+  coherency-status:
+    description: "Coherency test execution status"
+    value: ${{ steps.coherency.outputs.status }}
+
+  coherency-details:
+    description: "Coherency test execution details"
+    value: ${{ steps.coherency.outputs.details }}
+
+  bundle-size-status:
+    description: "Bundle size analysis status"
+    value: ${{ steps.bundle.outputs.status }}
+
+  bundle-size-details:
+    description: "Bundle size analysis details"
+    value: ${{ steps.bundle.outputs.details }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.build-artifact }}
+        path: build/
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run coherency tests
+      id: coherency
+      shell: bash
+      run: |
+        echo "Running coherency tests with Bun..."
+
+        # Run coherency script with bun run
+        if bun run coherency; then
+          echo "status=success" >> $GITHUB_OUTPUT
+          echo "details=Coherency checks passed" >> $GITHUB_OUTPUT
+        else
+          echo "status=failure" >> $GITHUB_OUTPUT
+          echo "details=Coherency issues detected" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+    - name: Analyze bundle size
+      id: bundle
+      shell: bash
+      run: |
+        echo "Analyzing bundle size..."
+
+        if [ -d "build" ] || [ -d "dist" ]; then
+          TOTAL_SIZE=$(du -sh build/ dist/ 2>/dev/null | awk '{print $1}' | head -1)
+          if [ -n "$TOTAL_SIZE" ]; then
+            echo "Bundle size: ${TOTAL_SIZE}"
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "details=Bundle size: ${TOTAL_SIZE}" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "details=Bundle size: N/A" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "No build output found for size analysis"
+          echo "status=skipped" >> $GITHUB_OUTPUT
+          echo "details=No build output found for analysis" >> $GITHUB_OUTPUT
+        fi
