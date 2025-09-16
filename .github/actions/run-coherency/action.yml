@@ -1,6 +1,11 @@
 name: "Run Coherency Tests"
 description: "Run coherency validation tests with Bun"
 
+inputs:
+  build-artifact:
+    description: "Name of the build artifact to download"
+    required: true
+
 outputs:
   status:
     description: "Coherency test execution status"
@@ -13,14 +18,15 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.build-artifact }}
+
     - name: Setup Bun
       uses: oven-sh/setup-bun@v2
       with:
         bun-version: latest
-
-    - name: Install dependencies
-      shell: bash
-      run: bun install
 
     - name: Run coherency tests
       id: coherency
@@ -28,7 +34,14 @@ runs:
       run: |
         echo "Running coherency tests with Bun..."
 
-        if bun run coherency; then
+        # List files to debug
+        echo "Current directory contents:"
+        ls -la
+        echo "Build directory contents:"
+        ls -la build/ 2>/dev/null || echo "Build directory not found"
+
+        # Run coherency script directly with Bun
+        if bun scripts/coherency/index.ts; then
           echo "status=success" >> $GITHUB_OUTPUT
           echo "details=Coherency checks passed" >> $GITHUB_OUTPUT
         else
