@@ -170,14 +170,11 @@ jobs:
 
   # Mutation testing (non-blocking, informational only)
   #
-  # Scoped to files actually touched by this PR rather than a full `pnpm mutation` run.
-  # Stryker's own incremental mode (reports/mutation/incremental.json) exists to make repeat
-  # runs fast, but that baseline is only ever updated by a human/CI committing a fresh copy —
-  # nothing in this repo does that, so it silently goes stale over time (it hadn't moved in 3
-  # months as of writing) and incremental mode degrades toward a full run, which is what was
-  # timing out here at the 30-minute mark. Diffing against the PR base and mutating only the
-  # affected helper source files sidesteps that entirely: runtime scales with the size of the
-  # PR, not the size of the project, regardless of how stale the incremental baseline gets.
+  # Scoped to files touched by this PR rather than the whole project: diffs against the PR base
+  # and mutates only the affected helper source files, so runtime is proportional to the size of
+  # the PR — independent of how current Stryker's own incremental baseline
+  # (reports/mutation/incremental.json, refreshed by mutation-dashboard.yml on pushes to main)
+  # happens to be.
   mutation:
     needs: version-calculation
     runs-on: ubuntu-latest

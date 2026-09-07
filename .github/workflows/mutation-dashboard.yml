@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: write # was read-only — this job now also commits the refreshed incremental baseline
+  contents: write # commits the refreshed incremental baseline
 
 env:
   NODE_LATEST_LTS: "26"
