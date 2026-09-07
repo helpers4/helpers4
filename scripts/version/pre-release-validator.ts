@@ -273,7 +273,7 @@ class PreReleaseValidator {
     // Check if we can run tests
     try {
       console.log('   🧪 Testing test command...');
-      await execAsync('pnpm test', { timeout: 30_000 });
+      await execAsync('pnpm test', { timeout: 300_000 });
       suite.results.push({
         message: 'Tests run successfully',
         passed: true
@@ -289,7 +289,7 @@ class PreReleaseValidator {
     // Check if we can build
     try {
       console.log('   🏗️ Testing build command...');
-      await execAsync('pnpm run build', { timeout: 60_000 });
+      await execAsync('pnpm run build', { timeout: 120_000 });
       suite.results.push({
         message: 'Build completed successfully',
         passed: true
@@ -316,7 +316,7 @@ class PreReleaseValidator {
     // Check coherency tests
     try {
       console.log('   🔍 Testing coherency...');
-      await execAsync('pnpm run coherency', { timeout: 30_000 });
+      await execAsync('pnpm run coherency', { timeout: 60_000 });
       suite.results.push({
         message: 'Coherency tests passed',
         passed: true

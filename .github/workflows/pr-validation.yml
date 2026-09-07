@@ -4,6 +4,15 @@ on:
   pull_request:
     branches: [main, develop]
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "**.md"
+      - "llms.txt"
+      - "LICENSE"
+      - ".github/ISSUE_TEMPLATE/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,7 +21,6 @@ env:
   # Runtime versions — update these when new LTS versions are released
   # ⚠️ These env vars are only available in regular job steps, NOT in reusable workflow with: inputs.
   # Reusable workflow calls (uses:) must use literal values in with: inputs.
-  NODE_OLDEST_LTS: "26"
   NODE_LATEST_LTS: "26"
   DENO_LATEST: "2.8.3"
   BUN_LATEST: "latest"
@@ -28,7 +36,6 @@ jobs:
 
     outputs:
       version: ${{ steps.version.outputs.version }}
-      version-changed: ${{ steps.version.outputs.changed }}
       status: ${{ steps.version.outputs.status }}
 
     steps:
@@ -48,7 +55,6 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "status=success" >> $GITHUB_OUTPUT
-          echo "changed=false" >> $GITHUB_OUTPUT
 
   # Build project with artifact upload
   build:
