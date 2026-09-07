@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # commits the refreshed incremental baseline
+  contents: read
 
 env:
   NODE_LATEST_LTS: "26"
@@ -22,15 +22,34 @@ env:
 jobs:
   mutation:
     runs-on: ubuntu-latest
-    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    # Skips release commits (release.yml pushes those with the same App token, so they'd
+    # otherwise retrigger this workflow too) and skips this workflow's own baseline-refresh
+    # commit below — the App token push does trigger `on: push` (unlike the default
+    # GITHUB_TOKEN), so without this guard every successful baseline commit would trigger
+    # another full mutation run, indefinitely.
+    if: >-
+      !startsWith(github.event.head_commit.message, 'chore(release):') &&
+      !contains(github.event.head_commit.message, 'refresh mutation testing incremental baseline')
     # A full run currently takes ~22-30+ min and grows with the helper count; 45 min gives
     # headroom for that growth. Sharding the mutation run (e.g. a matrix per helper category)
     # is the durable fix once this margin gets tight again — see helpers4/typescript#159.
     timeout-minutes: 45
 
     steps:
+      # main is a protected branch that rejects direct pushes from the default GITHUB_TOKEN
+      # (requires verified signatures / a PR) — a GitHub App installation token is one of the
+      # bypass actors, same as release.yml's version-bump commits use.
+      - name: Get GitHub App Token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.PUSHINATOR_ID }}
+          private-key: ${{ secrets.PUSHINATOR_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          token: ${{ steps.app_token.outputs.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -57,10 +76,6 @@ jobs:
       # `always()` so a below-threshold score (pnpm mutation exits non-zero on that, per
       # stryker.config.mjs's `break: 60`) still gets its baseline committed — a fresh baseline
       # is valuable regardless of whether this run's score itself passed.
-      #
-      # Pushed with the default GITHUB_TOKEN (not a PAT/App token) so this push does not
-      # re-trigger this (or any other) `on: push` workflow — GitHub's own documented loop
-      # prevention for the default token, not something configured here.
       - name: Commit the refreshed incremental baseline
         if: always()
         run: |
