@@ -3,6 +3,15 @@ name: Mutation Dashboard
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - "**.md"
+      - "llms.txt"
+      - "LICENSE"
+      - ".github/ISSUE_TEMPLATE/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write # commits the refreshed incremental baseline

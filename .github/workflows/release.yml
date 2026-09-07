@@ -75,6 +75,7 @@ jobs:
     uses: ./.github/workflows/job-tests.yml
     with:
       node-version: "26"
+      coverage: true
 
   # Step 5: Security audit
   security:
