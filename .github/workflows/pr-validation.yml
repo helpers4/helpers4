@@ -169,13 +169,22 @@ jobs:
       build-artifact: build-${{ github.run_id }}
 
   # Mutation testing (non-blocking, informational only)
+  #
+  # Scoped to files actually touched by this PR rather than a full `pnpm mutation` run.
+  # Stryker's own incremental mode (reports/mutation/incremental.json) exists to make repeat
+  # runs fast, but that baseline is only ever updated by a human/CI committing a fresh copy —
+  # nothing in this repo does that, so it silently goes stale over time (it hadn't moved in 3
+  # months as of writing) and incremental mode degrades toward a full run, which is what was
+  # timing out here at the 30-minute mark. Diffing against the PR base and mutating only the
+  # affected helper source files sidesteps that entirely: runtime scales with the size of the
+  # PR, not the size of the project, regardless of how stale the incremental baseline gets.
   mutation:
     needs: version-calculation
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     outputs:
-      status: ${{ steps.mutation.outputs.status }}
+      status: ${{ steps.status.outputs.status }}
 
     steps:
       - name: Checkout code
@@ -186,13 +195,70 @@ jobs:
         with:
           node-version: ${{ env.NODE_LATEST_LTS }}
 
+      - name: Detect changed mutation targets
+        id: changed
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}" HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          declare -A seen
+          FILES=()
+
+          while IFS= read -r file; do
+            # Match helpers/<category>/<name>.ts (any suffix, including none)
+            if [[ "$file" =~ ^helpers/([^/]+)/([^/]+)\.ts$ ]]; then
+              cat="${BASH_REMATCH[1]}"
+              name="${BASH_REMATCH[2]}"
+              # A change to the implementation OR its tests both mean "re-check mutation
+              # coverage for this source file" — strip known suffixes to get its base name.
+              base="${name%.bench}"
+              base="${base%.test}"
+              base="${base%.spec}"
+              base="${base%.example}"
+              # index.ts is an auto-generated barrel with no logic of its own — not mutable.
+              if [[ "$base" == "index" ]]; then
+                continue
+              fi
+              src_file="helpers/$cat/$base.ts"
+              if [[ -f "$src_file" && -z "${seen[$src_file]+set}" ]]; then
+                FILES+=("$src_file")
+                seen[$src_file]=1
+              fi
+            fi
+          done <<< "$CHANGED"
+
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "files=" >> $GITHUB_OUTPUT
+            echo "No helper source files affected by this PR."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+            # Stryker's --mutate takes a comma-separated list of globs.
+            IFS=','; echo "files=${FILES[*]}" >> $GITHUB_OUTPUT; unset IFS
+            echo "Mutation targets: ${FILES[*]}"
+          fi
+
       - name: Run mutation tests
         id: mutation
+        if: steps.changed.outputs.skip != 'true'
         run: |
-          if pnpm mutation; then
+          if pnpm exec stryker run --mutate "${{ steps.changed.outputs.files }}"; then
             echo "status=success" >> $GITHUB_OUTPUT
           else
             echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set status
+        id: status
+        if: always()
+        run: |
+          if [ "${{ steps.changed.outputs.skip }}" == "true" ]; then
+            echo "status=skipped" >> $GITHUB_OUTPUT
+          else
+            echo "status=${{ steps.mutation.outputs.status }}" >> $GITHUB_OUTPUT
           fi
 
   # Benchmarks (non-blocking, informational only)
