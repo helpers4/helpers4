@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write # was read-only — this job now also commits the refreshed incremental baseline
 
 env:
   NODE_LATEST_LTS: "26"
@@ -37,3 +37,30 @@ jobs:
           STRYKER_DASHBOARD_API_KEY: ${{ secrets.STRYKER_DASHBOARD_API_KEY }}
           STRYKER_DASHBOARD_VERSION: main
         run: pnpm mutation
+
+      # This is the only place reports/mutation/incremental.json ever gets refreshed — without
+      # it, Stryker's incremental mode has no fresh baseline to diff against and every run
+      # (here and on every PR) degrades toward a full, ~30-minute project-wide mutation test.
+      # `always()` so a below-threshold score (pnpm mutation exits non-zero on that, per
+      # stryker.config.mjs's `break: 60`) still gets its baseline committed — a fresh baseline
+      # is valuable regardless of whether this run's score itself passed.
+      #
+      # Pushed with the default GITHUB_TOKEN (not a PAT/App token) so this push does not
+      # re-trigger this (or any other) `on: push` workflow — GitHub's own documented loop
+      # prevention for the default token, not something configured here.
+      - name: Commit the refreshed incremental baseline
+        if: always()
+        run: |
+          if git diff --quiet -- reports/mutation/incremental.json; then
+            echo "Incremental baseline unchanged — nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/mutation/incremental.json
+          git commit -m "chore(CI-CD): 🔧 refresh mutation testing incremental baseline"
+
+          if ! git push origin HEAD:main; then
+            echo "::warning::Push failed (likely raced another push to main) — the baseline stays stale until the next push-to-main run retries this."
+          fi
