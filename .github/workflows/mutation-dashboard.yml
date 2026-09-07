@@ -23,7 +23,10 @@ jobs:
   mutation:
     runs-on: ubuntu-latest
     if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
-    timeout-minutes: 30
+    # A full run currently takes ~22-30+ min and grows with the helper count; 45 min gives
+    # headroom for that growth. Sharding the mutation run (e.g. a matrix per helper category)
+    # is the durable fix once this margin gets tight again — see helpers4/typescript#159.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout code
@@ -49,7 +52,8 @@ jobs:
 
       # This is the only place reports/mutation/incremental.json ever gets refreshed — without
       # it, Stryker's incremental mode has no fresh baseline to diff against and every run
-      # (here and on every PR) degrades toward a full, ~30-minute project-wide mutation test.
+      # (here and on every PR) degrades toward a full, timeout-minutes-length project-wide
+      # mutation test.
       # `always()` so a below-threshold score (pnpm mutation exits non-zero on that, per
       # stryker.config.mjs's `break: 60`) still gets its baseline committed — a fresh baseline
       # is valuable regardless of whether this run's score itself passed.
