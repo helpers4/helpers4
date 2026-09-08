@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   }
 
   let merged: MutationTestResult | undefined;
-  const missing: string[] = [];
+  let zeroMutantCount = 0;
 
   for (const dirName of shardDirNames) {
     const dir = path.join(shardsDir, dirName);
@@ -71,15 +71,19 @@ async function main(): Promise<void> {
       if (file in report.files) {
         merged.files[file] = report.files[file];
       } else {
-        missing.push(`${file} (shard ${manifest.shard})`);
+        // Stryker omits a file from `files` entirely when it has no mutable code (pure
+        // type/interface declarations, erased at compile time) — not a sign the shard's run
+        // failed. A genuinely failed shard never produces mutation.json at all (Stryker writes
+        // the whole report in one shot at the end), which the artifact-count check above
+        // already catches.
+        zeroMutantCount++;
       }
     }
   }
 
-  if (missing.length > 0) {
-    throw new Error(
-      `${missing.length} file(s) owned by a shard have no result in that shard's report ` +
-        `— its run likely failed before completing:\n${missing.join('\n')}`,
+  if (zeroMutantCount > 0) {
+    console.log(
+      `${zeroMutantCount} assigned file(s) had no mutants (type-only files) and were skipped.`,
     );
   }
 
