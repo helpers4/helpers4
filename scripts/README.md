@@ -35,6 +35,12 @@ License management
 
 - **add-license-headers.ts** : Automatic license header addition
 
+### 🧬 `mutation/`
+
+Mutation testing support scripts
+
+- **merge-shards.ts** : Combines sharded mutation-dashboard.yml runs into one project-wide report
+
 ### 🚀 `publish/`
 
 Package publishing scripts
